@@ -1,43 +1,63 @@
 import pandas as pd
+from pathlib import Path
 
-def parse_first_sheet_from_xlsx(file_path):
+def parse_first_sheet_from_xlsx(folder_path):
     """
     TODO DESCRIPTION
 
     Args:
-        file_path (str): The path to the XLSX file.
+        folder_path (str): The path to the timesheet files.
     """
-    try:
+    try:      
+        timesheet_data = pd.DataFrame(columns=["date","hours","week_ending","week_pto","category"])
+        flagged_sheets = set()
+        holidays = set()
 
-        # Read the first sheet from the Excel file into a pandas DataFrame
-        df = pd.read_excel(file_path, sheet_name=0)
+        for file_path in folder_path.iterdir():
+            if file_path.is_file():
+                # timesheet data always on the first sheet
+                df = pd.read_excel(file_path, sheet_name=0)
+                print(f"Reading'{file_path}'")
+                
+                week_ending = df.iloc[1,2]
+                mon_thru_fri_dates = df.iloc[3,6:11].tolist()
+                mon_thru_fri_totals = []
+                week_pto = ""
+                for index, row in df.iterrows():
+                    # template changes between 2023 and 2024 moved the daily totals text over a column due to a merged cell  
+                    if(row.iloc[2]=="Daily totals:" or row.iloc[3]=="Daily totals:"):
+                        mon_thru_fri_totals = row.iloc[6:11]
 
-        # Optional: Print some basic information about the data
-        print(f"Reading'{file_path}'")
-        print("\nFirst 5 rows of the data:")
-        # Use to_string() for better formatting in the console
-        # print(df.head().to_string())
+                    if(row.iloc[6]=="PTO:"):
+                        week_pto = row.iloc[10]
 
-        mon_thru_fri_dates = df.iloc[3,6:11].tolist()
-        print(mon_thru_fri_dates)
-        # You can now iterate through the data
-        # Example: iterate through rows and print a specific column value
-        print("\nIterating through rows (example):")
-        # for index, row in df.iterrows():
-        #     print(row[6])
+                    # if("holiday" in row.iloc[2].lower()):
+                    #     print('found')
+                    #     pass
+                        #check for column with 8 on this row, then get the corresponding date
 
-        return df
 
-    except FileNotFoundError:
-        print(f"Error: The file '{file_path}' was not found.")
+
+                if len(mon_thru_fri_totals)<5:
+                    flagged_sheets.add(file_path.name)
+                    print("Failed to find totals")
+                elif week_pto == "":
+                    flagged_sheets.add(file_path.name)
+                    print("Failed to find pto")
+                else:
+                    weekly_data = pd.DataFrame({"date": mon_thru_fri_dates, "hours": mon_thru_fri_totals, 
+                                                "week_ending": week_ending, "week_pto": week_pto})
+                    non_empty_dfs = [df for df in [weekly_data, timesheet_data] if not df.empty]
+                    timesheet_data = pd.concat(non_empty_dfs, ignore_index=True)
+
+        print(timesheet_data)
+        print("unable to parse", flagged_sheets)
+
     except ValueError as e:
         print(f"Error: Could not read the Excel file. Details: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-# --- Example Usage ---
-# Make sure you have an 'example.xlsx' file in the same directory, 
-# or replace 'example.xlsx' with the correct path to your file.
 if __name__ == "__main__":
-    excel_file_path = "./sample_timesheets/SBAL241004.xlsx"
-    dataframe = parse_first_sheet_from_xlsx(excel_file_path)
+    folder_path = Path("./sample_timesheets")
+    parse_first_sheet_from_xlsx(folder_path)
