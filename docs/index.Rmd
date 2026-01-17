@@ -50,13 +50,11 @@ Looking for examples of how I used a specific tool or technologies? Follow these
 
 # Main Data Structure
 
-My creative writing timesheet is tracked in a Google Sheets.
-
-There are five main fields:
+My creative writing timesheet is tracked in a Google Sheets and there are five fields:
 
 -   Day - when the writing occurred. There can be multiple entries for the same day logged against different projects (such as August 10th in the example below)
 
--   Hours - tracked in [15 minute increments](#why-15-minutes? "Why 15 minutes") or 0.25 of an hour
+-   Hours - tracked in [15 minute increments](#why-15-minutes "Why 15 minutes") or 0.25 of an hour
 
 -   Category - broad categorization about the type of writing activity
 
@@ -64,13 +62,15 @@ There are five main fields:
 
 -   Sub Project - an optional field to group specific efforts on a project
 
-<img src="timesheet_screenshot.png" alt="Screenshot of writing timesheet" style="border: 2px solid #595959; padding: 5px; border-radius: 4px; max-width=400px"/>
+![Screenshot of writing timesheet](timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
 Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets])
 
 # The Goal
 
-My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024.
+My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
+
+\<todo - side by side option?\>
 
 ```{r 2024 histogram, echo=FALSE}
 year_2024 <- timesheet_complete %>%
@@ -78,10 +78,9 @@ year_2024 <- timesheet_complete %>%
   group_by(date) %>%
   summarise(sum_hours = sum(Hours))
 
-year_2024$highlight <- ifelse(year_2024$sum_hours == 0.5, "Highlighted", "Normal")
-
-mean_val <- mean(year_2024$sum_hours)
-median_val <- median(year_2024$sum_hours)
+year_2024$highlight <- ifelse((year_2024$sum_hours == 0.5 
+                                | year_2024$sum_hours == 1.25),
+                              "Highlighted", "Normal")
 
 ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
   geom_histogram(
@@ -99,32 +98,100 @@ ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
     y = "Number of days"
   ) +
   annotate("text",
-         x = 0.5, 
+         x = 0.5 + .125, #center of bin
          y = 52,
          label = "Mode: 0.5",
          size = 3) +
   annotate("text",
-         x = mean_val, 
-         y = 40,
-         label = "Mean: 1.51",
-         size = 3) +
-  annotate("text",
-         x = median_val, 
-         y = 40,
+         x = 1.9, 
+         y = 35,
          label = "Median: 1.25",
-         size = 3)
+         hjust = "left",
+         size = 3) +
+  annotate("curve",
+           x = 1.9 - 0.05,
+           y = 35,
+           xend = 1.25 +.125,
+           yend = 32,
+           arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text",
+         x = 2.2, 
+         y = 30,
+         label = "Mean: 1.51",
+         hjust = "left",
+         size = 3) +
+  annotate("curve",
+           x = 2.2 - 0.05,
+           y = 30,
+           xend = 1.52,
+           yend = 28.5,
+           arrow = arrow(length = unit(0.3, "cm"))) +
+  geom_segment(
+    aes(x=1.51, y=-2, xend=1.51, yend=28), 
+    linewidth = 0.5,
+    linetype = "dashed")
 ```
 
+```{r 2025 histogram, echo=FALSE}
 
-# The Story behing the Data
+year_2025 <- timesheet_complete %>%
+  filter(year(date) == 2025) %>%
+  group_by(date) %>%
+  summarise(sum_hours = sum(Hours))
+
+year_2025$highlight <- ifelse((year_2025$sum_hours == 0.25 
+                                | year_2025$sum_hours == 0.5),
+                              "Highlighted", "Normal")
+
+ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
+  geom_histogram(
+    binwidth = 0.25,
+    boundary = 0,
+    closed = "left",
+    color = "#FFFFFF",
+    show.legend = FALSE
+    ) +
+  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
+  theme_minimal() +
+  labs(
+    title = "2025",
+    x = "Hours written",
+    y = "Number of days"
+  ) +
+  annotate("text",
+         x = 0.25 + .125, #center of bin
+         y = 83 + 2,
+         label = "Mode: 0.25",
+         size = 3) +
+  annotate("text",
+         x = 0.5, 
+         y = 62,
+         label = "Median: 0.5",
+         hjust = "left",
+         size = 3) +
+  annotate("text",
+         x = 1.25, 
+         y = 55,
+         label = "Mean: 0.79",
+         hjust = "left",
+         size = 3) +
+  annotate("curve",
+          x = 1.25 - 0.05, 
+          y = 55, 
+          xend = 0.79 + .01,
+          yend = 41,
+          arrow = arrow(length = unit(0.3, "cm"))) +
+  geom_segment(
+    aes(x=0.79, y=-2, xend=0.79, yend=40), 
+    linewidth=0.5,
+    linetype = "dashed")
+```
+
+# The Story behind the Data
 
 \<quarterly plot\>
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-The reality was, though, 2025 did not surpass 2024 and looking at my writing productivity at a quarterly level, it is pLooking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period. 
+Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period. 
 
 # Appendix
 
