@@ -1,0 +1,151 @@
+---
+title: "Creative Writing Data Analysis"
+author: "Sarah Ball"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("tidyverse")
+library(tidyverse)
+
+timesheet <- read.csv("core_writing_data.csv")
+timesheet$date <- as.Date(timesheet$Day, format = "%m/%d/%Y")
+timesheet_complete <- timesheet %>%
+  filter(!is.na(date)) %>%
+  complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Time = "N/A", Category = "N/A", Project = "N/A", Sub.Project = ""))
+
+#5 color palette
+#003f5c
+#58508d
+#bc5090
+#ff6361
+#ffa600
+```
+
+<Placeholder for opening graphic>
+
+# Summary
+
+This is a personal project I created to demonstrate my analytical and technical proficiency applied to my creative writing process. My goal was to look for trends in the data and identify lead metrics that drive consistent output and provide myself with a data-driven roadmap for continued growth.
+
+With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by my software development work at Menlo Innovations.
+
+From this data, I created visualizations to help contextualize the numbers, enriched my findings with additional data sources to expand that narrative, and created a dashboard for daily tracking of progress on experiments I am running to increase my writing output.
+
+# Quick Links
+
+Looking for examples of how I used a specific tool or technologies? Follow these links to jump to the relevant section or supplementary resource:
+
+-   [**Spreadsheets**] - pivot tables, charts, and formulas
+
+-   **Python & Data Cleaning** - script used to extract and clean supplemental data
+
+-   **R** - used to create most of the visuals in this report
+
+-   TBD: **Tableau** - I made a live dashboard to track my core metrics
+
+-   TBD: **Power BI** -
+
+# Main Data Structure
+
+My creative writing timesheet is tracked in a Google Sheets.
+
+There are five main fields:
+
+-   Day - when the writing occurred. There can be multiple entries for the same day logged against different projects (such as August 10th in the example below)
+
+-   Hours - tracked in [15 minute increments](#why-15-minutes? "Why 15 minutes") or 0.25 of an hour
+
+-   Category - broad categorization about the type of writing activity
+
+-   Project - a shortened title of the story
+
+-   Sub Project - an optional field to group specific efforts on a project
+
+<img src="timesheet_screenshot.png" alt="Screenshot of writing timesheet" style="border: 2px solid #595959; padding: 5px; border-radius: 4px; max-width=400px"/>
+
+Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets])
+
+# The Goal
+
+My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024.
+
+```{r 2024 histogram, echo=FALSE}
+year_2024 <- timesheet_complete %>%
+  filter(year(date) == 2024) %>%
+  group_by(date) %>%
+  summarise(sum_hours = sum(Hours))
+
+year_2024$highlight <- ifelse(year_2024$sum_hours == 0.5, "Highlighted", "Normal")
+
+mean_val <- mean(year_2024$sum_hours)
+median_val <- median(year_2024$sum_hours)
+
+ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
+  geom_histogram(
+    binwidth = 0.25,
+    boundary = 0,
+    closed = "left",
+    color = "#FFFFFF",
+    show.legend = FALSE
+    ) +
+  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
+  theme_minimal() +
+  labs(
+    title = "2024",
+    x = "Hours written",
+    y = "Number of days"
+  ) +
+  annotate("text",
+         x = 0.5, 
+         y = 52,
+         label = "Mode: 0.5",
+         size = 3) +
+  annotate("text",
+         x = mean_val, 
+         y = 40,
+         label = "Mean: 1.51",
+         size = 3) +
+  annotate("text",
+         x = median_val, 
+         y = 40,
+         label = "Median: 1.25",
+         size = 3)
+```
+
+
+# The Story behing the Data
+
+\<quarterly plot\>
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+The reality was, though, 2025 did not surpass 2024 and looking at my writing productivity at a quarterly level, it is pLooking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period. 
+
+# Appendix
+
+## Spreadsheets
+
+\<placeholder\>
+
+## Why 15 minutes? {#why-15-minutes}
+
+placeholder
+
+## Category explanation
+
+For my timesheet, I define my categories this way:
+
+-   1st draft - Writing the initial first draft of a story
+
+-   2nd draft - Following the first draft, all the work needed to revise it into complete, coherent, and readable state.
+
+-   3rd+ draft - Includes 3rd and later drafts. Usually just polish or adjustments to further improve the story
+
+-   Free write - Catch-all category for activities like writing loose scenes for side projects, doing writing exercises, or brainstorming future projects. If a story later progresses to a full 1st draft, some free write entries might get recategorized into the 1st draft category
+
+-   Querying - Time spent preparing material to query literary agents, researching agents, and any admin or meetings that result
