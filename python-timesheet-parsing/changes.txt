@@ -7,4 +7,5 @@ List of changes made to original data set organized by Friday week ending date.
 2023-10-27 - Inaccurate file name and date in file. Original was 2023-10-28
 2024-05-10 - Inconsistent file name. Originally named "Copy of SBAL240510.xlsx".
 2025-01-10 - Inaccurate date in file. Original was 2024-12-10
-
+2025-01-03 - Removed incorrect float holiday
+2023-23-06 - Daily totals formula did not include memorial day holiday row. Originally listed 0 hours

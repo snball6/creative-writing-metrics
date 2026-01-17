@@ -1,0 +1,22 @@
+date,hours,week_ending,week_pto,type_by_hours,category,notes
+2024-10-05,0.0,2024-10-11,10.5,weekend,weekend,
+2024-10-06,8.0,2024-10-11,10.5,workday,workday,
+2024-10-07,9.0,2024-10-11,10.5,workday,workday,
+2024-10-08,4.25,2024-10-11,10.5,partial workday,pto,Calendar event - doctor appointment
+2024-10-09,0.0,2024-10-11,10.5,pto,pto,
+2024-10-10,0.0,2024-10-11,10.5,pto,vacation,Vrbo email
+2024-10-11,0.25,2024-10-11,10.5,weekend,weekend,"Worked Sunday, took extra day off mid week to offset"
+2024-09-28,0.0,2024-10-04,7.25,weekend,weekend,
+2024-09-29,0.0,2024-10-04,7.25,weekend,weekend,
+2024-09-30,8.0,2024-10-04,7.25,workday,workday,
+2024-10-01,8.25,2024-10-04,7.25,workday,workday,
+2024-10-02,8.0,2024-10-04,7.25,workday,holiday,
+2024-10-03,0.0,2024-10-04,7.25,pto,vacation,Vrbo email
+2024-10-04,0.5,2024-10-04,7.25,weekend,weekend,
+2024-09-14,0.0,2024-09-20,0.0,weekend,weekend,
+2024-09-15,0.0,2024-09-20,0.0,weekend,weekend,
+2024-09-16,8.0,2024-09-20,0.0,workday,holiday,
+2024-09-17,8.0,2024-09-20,0.0,workday,workday,
+2024-09-18,8.0,2024-09-20,0.0,workday,workday,
+2024-09-19,8.0,2024-09-20,0.0,workday,workday,
+2024-09-20,0.25,2024-09-20,0.0,weekend,weekend,
