@@ -6,9 +6,12 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(out.width = "100%")
 install.packages("tidyverse")
 library(tidyverse)
+library(knitr)
+library(kableExtra)
 
 timesheet <- read.csv("core_writing_data.csv")
 timesheet$date <- as.Date(timesheet$Day, format = "%m/%d/%Y")
@@ -28,6 +31,8 @@ timesheet_complete <- timesheet %>%
 
 # Summary
 
+\<revise when analysis complete to incorporate high level summary\>
+
 This is a personal project I created to demonstrate my analytical and technical proficiency applied to my creative writing process. My goal was to look for trends in the data and identify lead metrics that drive consistent output and provide myself with a data-driven roadmap for continued growth.
 
 With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by my software development work at Menlo Innovations.
@@ -40,7 +45,7 @@ Looking for examples of how I used a specific tool or technologies? Follow these
 
 -   [**Spreadsheets**](#spreadsheets) - pivot tables, charts, and formulas
 
--   **Python & Data Cleaning** - script used to extract and clean supplemental data
+-   [**Python & Data Cleaning**](#python-and-data-cleaning) - script used to extract and clean supplemental data
 
 -   **R** - this web page was made using R Markdown and most of the visuals were made using the ggplot2 library
 
@@ -62,17 +67,16 @@ My creative writing timesheet is tracked in a Google Sheets and there are five f
 
 -   Sub Project - an optional field to group specific efforts on a project
 
-![Screenshot of writing timesheet](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
-Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets])
+Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets](#spreadsheets))
 
 # The Goal {#the-goal}
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
 
-\<todo - side by side option?\>
 
-```{r 2024 histogram, echo=FALSE, fig.width=12}
+```{r 2024 histogram, fig.height=4, fig.width=12}
 year_2024 <- timesheet_complete %>%
   filter(year(date) == 2024) %>%
   group_by(date) %>%
@@ -133,7 +137,7 @@ ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
     linetype = "dashed")
 ```
 
-```{r 2025 histogram, echo=FALSE, fig.width=12}
+```{r 2025 histogram, fig.height=3, fig.width=12}
 
 year_2025 <- timesheet_complete %>%
   filter(year(date) == 2025) %>%
@@ -189,21 +193,147 @@ ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
     linetype = "dashed")
 ```
 
-# The Story behind the Data
+# Behind the Data
 
-\<quarterly plot\>
+![Total hours per quarter](images/placeholder_quarterly.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
 Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period.
 
-\<Table of average hours/week, month, year + totals\>
+```{r totals table}
+df <- data.frame(
+  Category = c("Q1", "Q2", "Q3", "Q4"),
+  y_2023 = c(63, 0, 28.5, 75),
+  y_2024 = c(173.5, 122.25, 145, 113.5),
+  y_2025 = c(57, 52.25, 92.5, 86.5)
+)
 
-So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not necessarily. There are stories behind those numbers--so first a quick overview, looking at the data at a more granular weekly cadence
+df_with_total <- df %>%
+  bind_rows(tibble(
+    Category = "Total",
+    y_2023 = sum(.$y_2023),
+    y_2024 = sum(.$y_2024),
+    y_2025 = sum(.$y_2025)
+  ))
 
+kable(df_with_total, col.names = c("", "2023", "2024","2025")) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center") %>%
+  row_spec(5, bold = T, )
+```
+
+So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not necessarily. There are stories behind those numbers--so first a quick overview, looking at the data at a more granular monthly cadence.
+
+![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
+
+**2023:**
+
+-   [Sorceress 2nd - Jan 2023]{style="background-color:#F07B72; padding:5px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents for representation.
+
+-   [1st draft attempt - Jul 2023]{style="background-color:#EA4335; padding:5px"} - I started writing a brand new story, but lost steam part way in.
+
+-   [Raven 1st - Sep 2023]{style="background-color:#46BDC6; padding:5px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and use the 50k words in 30 days challenge to tackle a project I had been attempting to write for many years. September and October I wrote my new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
+
+-   Dec 2023 - Sorceress 3rd: Fresh off that success, I decided to revisit my Sorceress manuscript again and attempt another round of querying.
+
+**2024:**
+
+-   Jan 2024 - Sorceress 4th - R&R: An agent reached out with interest in the story. She gave me some suggest changes and requested I revise and resubmit for consideration. I invested all free time I had in getting the edits in and resubmitted in under 2 months. Unfortutunately, the agent decided not to sign the project.
+
+-   Mar 2024 - Raven 2nd: I eagerly dove into the 2nd draft of my Raven manuscript
+
+-   Jul 2024 - Sorceress 5th: I decided to give the Sorceress project one more go, revising it further and submitted another round of queries. No bites. I decided to shelve the manuscript for now.
+
+-   Oct 2024 - Katarin 1st: My 2nd year of NaNoWriMo, I worked on a much shorter project and managed the 50k goal in 23 days!
+
+-   Dec 2024 - Raven 2nd: I was into the thick of the rewrite now. Not the fun and exciting clean up of the opening chapters, but the parts where I needed to address plot gaps, character motivations, and point of view.
+
+**2025:**
+
+-   Feb, May, and June 2025 - Paused: In order to focus on online certification, a job search, and later adjusting to a new job, I let my morning writing habit lapse.
+
+-   Jul 2025 - Raven 2nd: I was getting back into the morning habit again, but still working on tricky spots in my manuscript
+
+-   Oct 2025 - Katarin 2nd: Instead of a NaNoWriMo rough draft, I decided to spend November working on Katarin's 2nd draft, and kept going on it through the end of the year.
+
+**So in summary:**
+
+2023 I was just getting into the swing of writing regularly.
+
+2024 writing projects were characterized by very engaging Sorceress 4th and 5th draft rewrites, the early exciting stages of my Raven 2nd draft, and a quick rough draft.
+
+2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with intermittent when I chose to pause in the first half of the year to accomodate life events. I saw a spike in my hours when I began work on the Katarin 2nd draft.
+
+# Apples to Oranges
+
+Given the differences, instead of taking 2024 whole sale as my model year, I want to use it as a starting point, but correct for expected differences between 2024 and my anticipated 2026.
+
+## Category Impact
+
+The first high-impact factor I saw was the type of writing I was doing in 2024. It is easier for me to have longer writing sessions when working on 3rd and later drafts. Much of the writing time is rereading existing chapters to validate consistency and continuity. 2nd drafts by contrast are high-intensity and I often need frequent breaks. I would compare 3rd+ drafts to a long walk and 2nd drafts to a sprint that at certain points in the project is also up hill. Below is the normalized distribution of 1st, 2nd, and 3rd+ draft writing entries illustrating the longer writing sessions.
+
+```{r category histogram, fig.height=3, fig.width=12}
+
+
+
+timesheet_complete %>%
+  filter(Category %in% c("1st Draft", "2nd Draft", "3rd+ Draft")) %>%
+  ggplot(aes(x = Hours, fill=Category)) +
+  geom_histogram(
+    binwidth = 0.5,
+    boundary = 0,
+    closed = "left",
+    color = "#FFFFFF",
+    aes(y = after_stat(density))
+    ) +
+  labs(
+    title = "Writing session lengths 2023-2025",
+    x = "Hours written",
+    y = "Density"
+  ) +
+  facet_wrap(~ Category)
+
+# timesheet_complete %>%
+#   filter(Category %in% c("1st Draft", "2nd Draft", "3rd+ Draft")) %>%
+#   ggplot(aes(x = date, y = Hours, color = Category)) +
+#     geom_point(alpha = .25)
+```
+I do not plan to work on a 3rd or later draft in 2026. To approximate this difference, I took my 2024 starting data set and replace my 3rd+ draft writing sessions with my median 2nd draft writing sessions from that year (____). This created the following reduction:
+
+<Placeholder reduction graph>
+
+## Schedule Changes
+
+Another complicating factor to my data set is my work schedule. In 2024 I was working Menlo Innovations and had a 4 day a week 32 hour schedule. In April 2025, I switched to a 5 day schedule at Quantum Signal AI. 
+
+<no facet version?>
+
+My daily writing hours are also so variable, that I wanted to better understand which spikes were tied to high output vacation days. Scheduling a few writing-focused vacation days over the year could be a way to boost overall writing output. After enriching my timesheet data with information about my work schedule, the pattern was quickly apparent. (For more on how I sourced and cleaned my schedule data set, see [**Python & Data Cleaning**](#python-and-data-cleaning).)
+
+<facet wrap distribution
+
+To approximate my 4 day to 5 day shift, replaced one weekend day a week with the median weekday writing sessions length for that year (____). Which furthered the reduction.
+
+
+<todo: what about vacation spikes
+
+## Model Year Review
+
+<look at the resulting stats I could target>
+<what those numbers might look like>
+
+## What ifs
+
+<toggle on/off adjustments>
+-I had written the minimum .25 all days
+-Or if I raised that minimum to .5
+-I had extra dedicated writing day a week (moderate 1-2 hr)
+-I had an extra highly dedicated writing day a month (4 hrs) 
+
+## The Plan:
 # Appendix
 
 ------------------------------------------------------------------------
 
-## Spreadsheets
+## Spreadsheets {#spreadsheets}
 
 ### Google Sheets vs Microsoft Excel
 
@@ -243,13 +373,15 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 -   **Combo Chart** - like xlookup, I do not have an example in the shared document, but this is another of my go-tos. For rewrite projects, I track how many pages in I am on a given day. This allows me to better visualize when I have to double back to earlier in the manuscript. I include hours written on a second access because I like seeing how the two relate to one another. Sometimes my "pages in" barely moves when I am hard at work on a difficult scene, but I can see that I was still putting in a lot of time. Below is a screenshot of what this looks like for the Raven project. In it you can see that I frequently had to double back around the 80 page mark to ensure I had the right setup for a particularly difficult scene.
 
-![Screenshot Raven combo chart](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
 ------------------------------------------------------------------------
 
 ## Why 15 minutes? {#why-15-minutes}
 
-placeholder
+Gathering metrics comes with a trade-off: the data entry must be easy enough to maintain, yet detailed enough to be meaningful. I chose 15 minutes in part due to my work at Menlo Innovations, where I was already practiced in tracking my time by the quarter-hour.
+
+Interestingly, this increment also serves as a great motivator. If I am five minutes into a new quarter-hour, I’m more likely to keep writing to hit the next increment. If I’ve written for 20 minutes, I might as well push for 30.
 
 ------------------------------------------------------------------------
 
@@ -266,3 +398,8 @@ For my timesheet, I define my categories this way:
 -   Free write - Catch-all category for activities like writing loose scenes for side projects, doing writing exercises, or brainstorming future projects. If a story later progresses to a full 1st draft, some free write entries might get recategorized into the 1st draft category
 
 -   Querying - Time spent preparing material to query literary agents, researching agents, and any admin or meetings that result
+
+
+------------------------------------------------------------------------
+
+## Python & Data Cleaning {#python-and-data-cleaning}
