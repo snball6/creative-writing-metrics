@@ -38,11 +38,11 @@ From this data, I created visualizations to help contextualize the numbers, enri
 
 Looking for examples of how I used a specific tool or technologies? Follow these links to jump to the relevant section or supplementary resource:
 
--   [**Spreadsheets**] - pivot tables, charts, and formulas
+-   [**Spreadsheets**](#spreadsheets) - pivot tables, charts, and formulas
 
 -   **Python & Data Cleaning** - script used to extract and clean supplemental data
 
--   **R** - used to create most of the visuals in this report
+-   **R** - this web page was made using R Markdown and most of the visuals were made using the ggplot2 library
 
 -   TBD: **Tableau** - I made a live dashboard to track my core metrics
 
@@ -54,25 +54,25 @@ My creative writing timesheet is tracked in a Google Sheets and there are five f
 
 -   Day - when the writing occurred. There can be multiple entries for the same day logged against different projects (such as August 10th in the example below)
 
--   Hours - tracked in [15 minute increments](#why-15-minutes "Why 15 minutes") or 0.25 of an hour
+-   Hours - tracked in [15 minute increments](#why-15-minutes "for why 15 minutes") or 0.25 of an hour
 
--   Category - broad categorization about the type of writing activity
+-   Category - broad [categorization](#category-explanation "For more on what each category means") about the type of writing activity
 
 -   Project - a shortened title of the story
 
 -   Sub Project - an optional field to group specific efforts on a project
 
-![Screenshot of writing timesheet](timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![Screenshot of writing timesheet](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
 Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets])
 
-# The Goal
+# The Goal {#the-goal}
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
 
 \<todo - side by side option?\>
 
-```{r 2024 histogram, echo=FALSE}
+```{r 2024 histogram, echo=FALSE, fig.width=12}
 year_2024 <- timesheet_complete %>%
   filter(year(date) == 2024) %>%
   group_by(date) %>%
@@ -90,6 +90,7 @@ ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
     color = "#FFFFFF",
     show.legend = FALSE
     ) +
+  coord_cartesian(xlim = c(0, 8)) +
   scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
   theme_minimal() +
   labs(
@@ -132,7 +133,7 @@ ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
     linetype = "dashed")
 ```
 
-```{r 2025 histogram, echo=FALSE}
+```{r 2025 histogram, echo=FALSE, fig.width=12}
 
 year_2025 <- timesheet_complete %>%
   filter(year(date) == 2025) %>%
@@ -151,6 +152,7 @@ ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
     color = "#FFFFFF",
     show.legend = FALSE
     ) +
+  coord_cartesian(xlim = c(0, 8)) +
   scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
   theme_minimal() +
   labs(
@@ -191,19 +193,67 @@ ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
 
 \<quarterly plot\>
 
-Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period. 
+Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period.
+
+\<Table of average hours/week, month, year + totals\>
+
+So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not necessarily. There are stories behind those numbers--so first a quick overview, looking at the data at a more granular weekly cadence
 
 # Appendix
 
+------------------------------------------------------------------------
+
 ## Spreadsheets
 
-\<placeholder\>
+### Google Sheets vs Microsoft Excel
+
+I have regularly used both Sheets and Excel for work and personal projects, but chose to use Google Sheets for tracking my creative writing time because I already do all my creative writing in Google Docs. I like to do my writing from across multiple devices, which at various points has meant a linux computer, a Chromebook laptop, and an Android Phone. This naturally led me towards Google's tools over Microsoft's.
+
+### Shared Writing Metrics
+
+You can view a subset of writing timesheet data [here](https://docs.google.com/spreadsheets/d/1N7T_HbgdGJGohsjXLYBfF8_POvJ1bwDPgBQJ9C8o-Us/edit?usp=sharing) along with the formulas and aggregations I use to track my time. To see which fields are populated through formulas you can use the shortcut `` ctrl + ` `` or the menu options `View > Show > Formulas` to toggle on formula view.
+
+A high level overview of some of the spreadsheet features I am using in this spreadsheet are:
+
+**Formulas:**
+
+-   **Importrange** - I chose to split the data I wanted to publicly share as part of this project from some of the more detailed and project-specific data I track in my timesheet--such as extra notes, word count, pages into a rewrite, and less-polished charts. I still wanted the shared sheet to include live data, rather than a snapshot, so I am importing the core metrics from my live spreadsheet into this shared document.
+
+-   **Countif**, **if, or, today** - On the "Skip Days" tab of the sheet, I am generating a full list of dates starting in 2023 to today and creating fill value rows for days I did not write.
+
+-   **Sort, vstack, filter -** To join the core writing day in with the skip days in the "Skip Days Added" tab, I am using **vstack**. I use **filter** to remove the blank space rows generated by formulas in my core data set, and I use another **filter** to only stack in those days that are skipped days. Lastly, for easier readability, I **sort** everything in ascending order.
+
+-   **Weekday -** I like to track my writing week from Monday to Sunday so that a single weekend's effort falls in the same week. I use the **weekday** formula and **if** to calculate the Sunday week ending date.
+
+-   **Xlookup -** I wanted to give an honorable mention to my favorite spreadsheet formula, even though it does not appear in my shared document. Introduced to Excel in 2019 and Sheets in 2022, this upgrade to **vlookup** is super powerful and I've used it often. I used **vlookup** heavily in my publishing job to aggregate error report data by book ISBN and often use **xlookup** for similar tasks where I want to match up two data sets. For this project, my creative writing data does not have a single unique key I could use for lookups. Because there can be multiple entries per date and if I had **xlookup** instead of **vstack** to join in my writing data with skip days, I would have lost entries that were on the same day.
+
+**Pivot Tables:**
+
+-   The tabs "Monthly Totals", "Weekly Totals", and "Daily Writing" each contain pivot tables aggregating the data using date groups at a monthly, weekly, and daily level
+
+-   For "Monthly Totals" I also used grouped columns to combine my smaller projects to reduce clutter for the chart of monthly writing hours by prioject.
+
+**Charts:**
+
+-   **Stacked bar** - Are my go-to for showing the aggregate total hours worked in a time period, while also distinguishing the different categories or projects worked on.
+
+-   **Scatter plot** - for "Daily Totals" I used scatter to show my daily writing because of the density and high variability of the data.
+
+-   **Histograms** - These are less-polished version of the histograms appearing [earlier](#the-goal).
+
+-   **Combo Chart** - like xlookup, I do not have an example in the shared document, but this is another of my go-tos. For rewrite projects, I track how many pages in I am on a given day. This allows me to better visualize when I have to double back to earlier in the manuscript. I include hours written on a second access because I like seeing how the two relate to one another. Sometimes my "pages in" barely moves when I am hard at work on a difficult scene, but I can see that I was still putting in a lot of time. Below is a screenshot of what this looks like for the Raven project. In it you can see that I frequently had to double back around the 80 page mark to ensure I had the right setup for a particularly difficult scene.
+
+![Screenshot Raven combo chart](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+
+------------------------------------------------------------------------
 
 ## Why 15 minutes? {#why-15-minutes}
 
 placeholder
 
-## Category explanation
+------------------------------------------------------------------------
+
+## Category explanation {#category-explanation}
 
 For my timesheet, I define my categories this way:
 
