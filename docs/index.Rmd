@@ -75,7 +75,6 @@ Prior to this personal project, my primary way of visualizing this information a
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
 
-
 ```{r 2024 histogram, fig.height=4, fig.width=12}
 year_2024 <- timesheet_complete %>%
   filter(year(date) == 2024) %>%
@@ -296,39 +295,35 @@ timesheet_complete %>%
 #   ggplot(aes(x = date, y = Hours, color = Category)) +
 #     geom_point(alpha = .25)
 ```
-I do not plan to work on a 3rd or later draft in 2026. To approximate this difference, I took my 2024 starting data set and replace my 3rd+ draft writing sessions with my median 2nd draft writing sessions from that year (____). This created the following reduction:
+
+I do not plan to work on a 3rd or later draft in 2026. To approximate this difference, I took my 2024 starting data set and replace my 3rd+ draft writing sessions with my median 2nd draft writing sessions from that year (\_\_\_\_). This created the following reduction:
 
 <Placeholder reduction graph>
 
 ## Schedule Changes
 
-Another complicating factor to my data set is my work schedule. In 2024 I was working Menlo Innovations and had a 4 day a week 32 hour schedule. In April 2025, I switched to a 5 day schedule at Quantum Signal AI. 
+Another complicating factor to my data set is my work schedule. In 2024 I was working Menlo Innovations and had a 4 day a week 32 hour schedule. In April 2025, I switched to a 5 day schedule at Quantum Signal AI.
 
-<no facet version?>
+\<no facet version?\>
 
-My daily writing hours are also so variable, that I wanted to better understand which spikes were tied to high output vacation days. Scheduling a few writing-focused vacation days over the year could be a way to boost overall writing output. After enriching my timesheet data with information about my work schedule, the pattern was quickly apparent. (For more on how I sourced and cleaned my schedule data set, see [**Python & Data Cleaning**](#python-and-data-cleaning).)
+My daily writing hours are also so variable, that I wanted to better understand which spikes were tied to high output vacation days. Scheduling a few writing-focused vacation days over the year could be a way to boost overall writing output. After enriching my timesheet data with information about my work schedule, the pattern was quickly apparent. (For more on how I sourced and cleaned my schedule data set from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning).)
 
-<facet wrap distribution
+\<facet wrap distribution
 
-To approximate my 4 day to 5 day shift, replaced one weekend day a week with the median weekday writing sessions length for that year (____). Which furthered the reduction.
+To approximate my 4 day to 5 day shift, replaced one weekend day a week with the median weekday writing sessions length for that year (\_\_\_\_). Which furthered the reduction.
 
-
-<todo: what about vacation spikes
+\<todo: what about vacation spikes
 
 ## Model Year Review
 
-<look at the resulting stats I could target>
-<what those numbers might look like>
+<look at the resulting stats I could target> <what those numbers might look like>
 
 ## What ifs
 
-<toggle on/off adjustments>
--I had written the minimum .25 all days
--Or if I raised that minimum to .5
--I had extra dedicated writing day a week (moderate 1-2 hr)
--I had an extra highly dedicated writing day a month (4 hrs) 
+<toggle on/off adjustments> -I had written the minimum .25 all days -Or if I raised that minimum to .5 -I had extra dedicated writing day a week (moderate 1-2 hr) -I had an extra highly dedicated writing day a month (4 hrs)
 
 ## The Plan:
+
 # Appendix
 
 ------------------------------------------------------------------------
@@ -399,7 +394,40 @@ For my timesheet, I define my categories this way:
 
 -   Querying - Time spent preparing material to query literary agents, researching agents, and any admin or meetings that result
 
-
 ------------------------------------------------------------------------
 
 ## Python & Data Cleaning {#python-and-data-cleaning}
+
+To better understand my writing habits, I wanted to add additional context about my work schedule. Were the spikes in writing productivity due to a vacation day spent writing? Were drops in productivity tied to sick days or a heavy workload?
+
+### Data Source
+
+For my work schedule from April 2025 forward, I could easily source this information from my employer's PTO application. I also usually include a memo line on the request distinguishing between sick days and vacation time. For those few entries missing that data, they were recent enough that I knew what category to put them in. Holidays I could pull from an informational email listing the effective holidays for the year.
+
+For data prior April 2025, I would have to get more creative. Outs were submitted through email from an account I no longer have access to, but I do have a nearly complete copy of all my Menlo timesheets from the 2023-2025 period of interest. These timesheets do not specify which days were sick days versus planned vacation outs, but they would allow me to assemble a list days I took PTO and effective holidays.
+
+### Timesheet structure
+
+My Menlo timesheets are structure for human readability, not an automated import. Below is an example timesheet with the data I want to pull out marked.
+
+![](images/annotated_menlo_timesheet.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
+
+Given the complexity of file format and the number of files (118 in total), I chose to write a python script to extract the information I needed into an easier csv format. My script needed to dynamically handle the varying number of rows and a changing layout. (During development, I found some variation in which cells were merged on the template over time). My entire python script can be found [here](https://github.com/snball6/creative-writing-metrics/blob/main/python-timesheet-parsing/timesheet_parser.py), but the parsing specifically occurs in the `parse_timesheets` function.
+
+For the example above, my script would mark Saturday, Sunday, and Friday as weekends. Monday and Tuesday and workdays. Wednesday as PTO, and Thursday as a Holiday.
+
+### Cleaning
+
+After I initially parsed the data, I created a quick calendar heatmap visualization to help me validate the output. It quickly revealed some potential issues in the data. For example, it looked like I had taken three weeks of vacation in April 2024! And I saw other blank weeks that did not appear to line up with any vacations I remembered taking.
+
+![](images/work_schedule_heatmap.svg)
+
+I added an additional check to my script to not only list any files that failed to parse, but to also check for any missing dates in the data. The results gave me a clear list of files to manually check, and an answer to why the missing weeks were not in my failed to parse list. The timesheets for those weeks had the right date in their file name, but the wrong one in their cells, resulting in those date's values being overwritten.
+
+Because I wanted to be able to reproduce my work, I kept a running list of all my changes to files–checked into the same repo as my parsing script and this report. I was also working on a duplicate copy of my timesheet files, so I would always have the originals available for reference or to revert my changes.
+
+One file I knew was missing before I even started my analysis. I decided to make a placeholder best-guess timesheet to bridge that gap. Because my goal for using this data was to identify non-work days that might explain outlier writing hours, and I had already verified there were no unusually high or low writing hours that week, I decided it was sufficient to assume a regular work week schedule. 
+
+If I had found that there was outlier data in that week or I had more missing weeks in the data set, I would have introduced an "unknown" category to help distinguish these days.
+
+### Additional Validation
