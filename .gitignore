@@ -1,3 +1,5 @@
 venv/
+
 actual_timesheets/
 actual_overrides.csv
+actual_schedule_output.csv

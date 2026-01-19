@@ -120,7 +120,7 @@ def generate_hours_heatmap(timesheet_data):
 if __name__ == "__main__":
     folder_path = Path("./sample_timesheets")
     overrides = Path("sample_overrides.csv")
-    output_file_name = "output.csv"
+    output_file_name = "sample_schedule_output.csv"
 
     timesheet_data, holidays = parse_timesheets(folder_path)
     # generate_hours_heatmap(timesheet_data) # comment in to visually validate results
