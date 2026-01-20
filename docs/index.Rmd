@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(out.width = "100%")
+library(zoo) #TODO: as.Date conflict
 install.packages("tidyverse")
 library(tidyverse)
 library(knitr)
@@ -193,8 +194,30 @@ ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
 ```
 
 # Behind the Data
+```{r quarterly totals, fig.height=4, fig.width=12}
+quarterly_totals <- timesheet_complete %>%
+  mutate(year_quarter = as.yearqtr(date)) %>% 
+  group_by(year_quarter) %>%                  
+  summarise(total_hours = sum(Hours)) %>%     
+  ungroup()
 
-![Total hours per quarter](images/placeholder_quarterly.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+quarterly_totals$highlight <- ifelse(
+                  (floor
+                   (as.numeric(as.yearqtr(quarterly_totals$year_quarter))) == 2024),
+                              "Highlighted", "Normal")
+
+ggplot(quarterly_totals, aes(x = year_quarter, y = total_hours,  fill=highlight)) +
+  geom_col(color = "#ffffff", show.legend = FALSE) +
+  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
+  labs(title = "Quarterly Total Hours",
+       x = "",
+       y = "Total Hours") +
+  theme_minimal() +
+  zoo::scale_x_yearqtr(format = "%Y Q%q", n = 99) + 
+  coord_cartesian(xlim = as.yearqtr(c("2023 Q1", "2025 Q4")))
+
+
+```
 
 Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period.
 
@@ -223,6 +246,47 @@ So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not nec
 
 ![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
 
+```{r annotated timeline, fig.height=4, fig.width=12}
+timeline <- read.csv("timeline_annotated.csv")
+timeline$date <- as.Date(timeline$Day, format = "%m/%d/%Y")
+timeline_complete <- timeline %>%
+  filter(!is.na(date)) %>%
+  complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Category = "N/A", Project = "N/A", Sub.Project = "", Timeline.category = ""))
+
+monthly_timeline <- timeline_complete %>%
+  mutate(year_month = floor_date(date, "month")) %>%
+  group_by(year_month, Timeline.category) %>%
+  summarise(total_hours = sum(Hours)) %>%
+  ungroup()
+
+custom_colors <- c("9 none" = "#B0B0B0",
+"5 Sorceress 2nd" = "#003f5c",
+"8 1st draft attempt" = "#5886a5",
+"7 Raven 1st" = "#955196",
+"6 Sorceress 3rd" = "#ff6e54",
+"4 Sorceress 4th - R & R" = "#faa600",
+"3 Raven 2nd" = "#dd5182",
+"2 Sorceress 5th" = "#01976C",
+"1 Katarin 1st" = "#97014B",
+"0 Katarin 2nd" = "#015697")
+
+
+ggplot(monthly_timeline, aes(x = year_month, y = total_hours,  fill=Timeline.category)) +
+  geom_col(color = "#ffffff", show.legend = FALSE) +
+  scale_fill_manual(values = custom_colors) +
+  labs(title = "Quarterly Total Hours",
+       x = "",
+       y = "Total Hours") +
+  theme_minimal() +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
 **2023:**
 
 -   [Sorceress 2nd - Jan 2023]{style="background-color:#F07B72; padding:5px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents for representation.
@@ -255,11 +319,11 @@ So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not nec
 
 **So in summary:**
 
-2023 I was just getting into the swing of writing regularly.
+2023 I was just getting into the swing of writing on a consistent and daily basis.
 
 2024 writing projects were characterized by very engaging Sorceress 4th and 5th draft rewrites, the early exciting stages of my Raven 2nd draft, and a quick rough draft.
 
-2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with intermittent when I chose to pause in the first half of the year to accomodate life events. I saw a spike in my hours when I began work on the Katarin 2nd draft.
+2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with intermittent breaks when I chose to pause in the first half of the year to accommodate life events. I saw a spike in my hours when I began work on the Katarin 2nd draft.
 
 # Apples to Oranges
 
