@@ -14,7 +14,7 @@ library(tidyverse)
 library(knitr)
 library(kableExtra)
 
-timesheet <- read.csv("core_writing_data.csv")
+timesheet <- read.csv("data/core_writing_data.csv")
 timesheet$date <- as.Date(timesheet$Day, format = "%m/%d/%Y")
 timesheet_complete <- timesheet %>%
   filter(!is.na(date)) %>%
@@ -194,6 +194,7 @@ ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
 ```
 
 # Behind the Data
+
 ```{r quarterly totals, fig.height=4, fig.width=12}
 quarterly_totals <- timesheet_complete %>%
   mutate(year_quarter = as.yearqtr(date)) %>% 
@@ -247,7 +248,7 @@ So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not nec
 ![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
 
 ```{r annotated timeline, fig.height=4, fig.width=12}
-timeline <- read.csv("timeline_annotated.csv")
+timeline <- read.csv("data/timeline_annotated.csv")
 timeline$date <- as.Date(timeline$Day, format = "%m/%d/%Y")
 timeline_complete <- timeline %>%
   filter(!is.na(date)) %>%
@@ -256,11 +257,10 @@ timeline_complete <- timeline %>%
 monthly_timeline <- timeline_complete %>%
   mutate(year_month = floor_date(date, "month")) %>%
   group_by(year_month, Timeline.category) %>%
-  summarise(total_hours = sum(Hours)) %>%
-  ungroup()
+  summarise(total_hours = sum(Hours), .groups = "drop")
 
 custom_colors <- c("9 none" = "#B0B0B0",
-"5 Sorceress 2nd" = "#003f5c",
+"5 Sorceress 2nd" = "#444e86",
 "8 1st draft attempt" = "#5886a5",
 "7 Raven 1st" = "#955196",
 "6 Sorceress 3rd" = "#ff6e54",
@@ -274,9 +274,9 @@ custom_colors <- c("9 none" = "#B0B0B0",
 ggplot(monthly_timeline, aes(x = year_month, y = total_hours,  fill=Timeline.category)) +
   geom_col(color = "#ffffff", show.legend = FALSE) +
   scale_fill_manual(values = custom_colors) +
-  labs(title = "Quarterly Total Hours",
+  labs(title = "Monthly Total Hours",
        x = "",
-       y = "Total Hours") +
+       y = "") +
   theme_minimal() +
   scale_x_date(
     date_breaks = "1 month",
@@ -287,43 +287,44 @@ ggplot(monthly_timeline, aes(x = year_month, y = total_hours,  fill=Timeline.cat
 
 
 ```
+
 **2023:**
 
--   [Sorceress 2nd - Jan 2023]{style="background-color:#F07B72; padding:5px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents for representation.
+-   [Sorceress 2nd - Jan 2023]{style="background-color:#444e86; color:#FFFFFF; padding:5px; border-radius: 10px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents seeking representation.
 
--   [1st draft attempt - Jul 2023]{style="background-color:#EA4335; padding:5px"} - I started writing a brand new story, but lost steam part way in.
+-   [1st draft attempt - Jul 2023]{style="background-color:#5886a5; color:#FFFFFF; padding:5px; border-radius: 10px"} - I started writing a brand new story, but lost steam part way in.
 
--   [Raven 1st - Sep 2023]{style="background-color:#46BDC6; padding:5px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and use the 50k words in 30 days challenge to tackle a project I had been attempting to write for many years. September and October I wrote my new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
+-   [Raven 1st - Sep 2023]{style="background-color:#955196; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and used the 50k words in 30 days challenge to tackle a project I had been attempting to write for many years. September and October I wrote my new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
 
--   Dec 2023 - Sorceress 3rd: Fresh off that success, I decided to revisit my Sorceress manuscript again and attempt another round of querying.
+-   [Sorceress 3rd - Dec 2023]{style="background-color:#ff6e54; color:#FFFFFF; padding:5px; border-radius: 10px"} - Fresh off that success, I decided to do another rewrite on my Sorceress manuscript and attempt another round of querying.
 
 **2024:**
 
--   Jan 2024 - Sorceress 4th - R&R: An agent reached out with interest in the story. She gave me some suggest changes and requested I revise and resubmit for consideration. I invested all free time I had in getting the edits in and resubmitted in under 2 months. Unfortutunately, the agent decided not to sign the project.
+-   [Sorceress 4th - R&R - Jan 2024]{style="background-color:#faa600; color:#FFFFFF; padding:5px; border-radius: 10px"} - An agent reached out with interest in the story. She gave me some suggest changes and requested I revise and resubmit. I invested all free time I had in getting the edits in and resubmitted in under 2 months. Unfortunately, the agent decided not to sign the project.
 
--   Mar 2024 - Raven 2nd: I eagerly dove into the 2nd draft of my Raven manuscript
+-   [Raven 2nd - Mar 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I eagerly dove into the 2nd draft of my Raven manuscript
 
--   Jul 2024 - Sorceress 5th: I decided to give the Sorceress project one more go, revising it further and submitted another round of queries. No bites. I decided to shelve the manuscript for now.
+-   [Sorceress 5th - Jul 2024]{style="background-color:#01976C; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to give the Sorceress project one more go, revising it further and submitted another round of queries. No bites. I decided to shelve the manuscript for now.
 
--   Oct 2024 - Katarin 1st: My 2nd year of NaNoWriMo, I worked on a much shorter project and managed the 50k goal in 23 days!
+-   [Katarin 1st - Oct 2024]{style="background-color:#97014B; color:#FFFFFF; padding:5px; border-radius: 10px"} - For my 2nd year participating in NaNoWriMo, I worked on a much shorter project and managed the 50k goal in 23 days!
 
--   Dec 2024 - Raven 2nd: I was into the thick of the rewrite now. Not the fun and exciting clean up of the opening chapters, but the parts where I needed to address plot gaps, character motivations, and point of view.
+-   [Raven 2nd - Dec 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I was into the thick of the Raven rewrite. Not the fun and exciting clean up of the opening chapters, but the parts where I needed to address plot gaps, character motivations, and point of view.
 
 **2025:**
 
--   Feb, May, and June 2025 - Paused: In order to focus on online certification, a job search, and later adjusting to a new job, I let my morning writing habit lapse.
+-   [Pauses - Feb, May, and Jun 2025]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - In order to focus on online certification, a job search, and later adjusting to a new job, I let my morning writing habit lapse.
 
--   Jul 2025 - Raven 2nd: I was getting back into the morning habit again, but still working on tricky spots in my manuscript
+-   [Raven 2nd - Jul 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I was getting back into the morning habit again, but still working on tricky parts of the my manuscript
 
--   Oct 2025 - Katarin 2nd: Instead of a NaNoWriMo rough draft, I decided to spend November working on Katarin's 2nd draft, and kept going on it through the end of the year.
+-   [Katarin 2nd - Oct 2024]{style="background-color:#015697; color:#FFFFFF; padding:5px; border-radius: 10px"} - Instead of a NaNoWriMo rough draft, I decided to spend November working on Katarin's 2nd draft, and kept going on it through the end of the year.
 
 **So in summary:**
 
 2023 I was just getting into the swing of writing on a consistent and daily basis.
 
-2024 writing projects were characterized by very engaging Sorceress 4th and 5th draft rewrites, the early exciting stages of my Raven 2nd draft, and a quick rough draft.
+2024 included highly engaging projects like my Sorceress 4th and 5th drafts, the early stages of my Raven 2nd draft, and a quick rough draft.
 
-2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with intermittent breaks when I chose to pause in the first half of the year to accommodate life events. I saw a spike in my hours when I began work on the Katarin 2nd draft.
+2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with several breaks to accomodate life events in the first half of the year. I saw a spike in my hours when I began work on the Katarin 2nd draft.
 
 # Apples to Oranges
 
@@ -448,7 +449,7 @@ Interestingly, this increment also serves as a great motivator. If I am five min
 
 For my timesheet, I define my categories this way:
 
--   1st draft - Writing the initial first draft of a story
+-   1st draft - Writing the initial first draft of a story. This is a fast and quick draft with the goal to write out a version of all the scenes in order with minimal editing done as I go.
 
 -   2nd draft - Following the first draft, all the work needed to revise it into complete, coherent, and readable state.
 
