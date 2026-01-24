@@ -362,7 +362,7 @@ This data enrichment helped me confirm that paid leave days in general--both sic
 
 I then applied this as the new writing session length for every Sunday in my model because my weekend habit is usually to spend the first weekend day on chores and life admin tasks, and then do more hobby and creative tasks the next two days.
 
-![](images/placeholder_schedule_adjustment.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680"}
+<schedule adjustment graph>
 
 ## Model Year Review
 
@@ -535,7 +535,7 @@ schedule <- read.csv("data/combined_workday_schedule.csv")
 schedule$date <- as.Date(schedule$date, format = "%Y-%m-%d")
 
 # Note look into the distributions different when I expand outside of 2024, but my skip day skew in 2023 might be a factor
-merged <- left_join(year_2024_baseline, schedule, by ="date")
+merged <- left_join(model_year, schedule, by ="date")
 merged <- merged %>% 
   mutate(schedule_type = case_when(
     schedule_category == "holiday" ~ "paid leave",
