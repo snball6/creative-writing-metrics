@@ -18,7 +18,7 @@ timesheet <- read.csv("data/core_writing_data.csv")
 timesheet$date <- as.Date(timesheet$Day, format = "%m/%d/%Y")
 #todo - possible data cleaning, collapse+combine totals for same day/cat/etc rows - know of only one repeat, but with times added in the future there will be more
 
-
+#update new column assignment operators to consistently be <-
 
 #this file is intentionally not included in the repo for privacy reasons
 schedule <- read.csv("data/combined_workday_schedule.csv") 
@@ -31,7 +31,7 @@ timesheet_complete <- timesheet %>%
 
 reduct_c = "#b6ddf6"
 base_color = "#7AA6C2"
-highight_c = "#004c6d"
+highlight_c = "#004c6d"
 
 ```
 
@@ -83,7 +83,6 @@ My goal for this project was to identify ways to increase my writing productivit
 
 Last year, going into 2025, I had set myself the goal of writing at least an hour most days, that is a mode of 1 hour or higher. At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
 
-\<todo: use facet wrap to make side by side + remove mean.
 
 ```{r 2024 histogram, fig.height=4, fig.width=12}
 y_24_25_date_grouped <- timesheet_complete %>%
@@ -118,7 +117,7 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
     ) +
   facet_wrap(~ year_s, labeller = facet_labeller) +
   coord_cartesian(xlim = c(0, 8)) +
-  scale_fill_manual(values = c("Highlighted" = highight_c, "Normal" = base_color)) +
+  scale_fill_manual(values = c("Highlighted" = highlight_c, "Normal" = base_color)) +
   theme_minimal() +
   theme(
     plot.title = element_text(size = 15)
@@ -294,12 +293,11 @@ model_year_long <- model_year %>%
   )
 
 #TODO REVISIT - probably not collapsing correctly...
-model_year_monthly <- model_year_long %>%
+model_year_long %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
-  summarise(total_hours = sum(split_hours), .groups = "drop")
-
-ggplot(model_year_monthly, aes(x = month, y = total_hours, fill = hour_set)) +
+  summarise(total_hours = sum(split_hours), .groups = "drop") %>%
+  ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
   geom_col(color = "#ffffff",
            position = position_stack(reverse = TRUE)
            ) +
@@ -408,19 +406,18 @@ model_year_daily$sched_adjust_hours = ifelse(model_year_daily$day_of_week == "Su
 
 model_year_daily$sched_adjust_reduction = model_year_daily$total_cat_adjust_hours - model_year_daily$sched_adjust_hours
 
-model_year_long <- model_year_daily %>%
+model_year_daily %>%
   pivot_longer(
     cols = c(sched_adjust_hours, sched_adjust_reduction),
     names_to = "hour_set",
     values_to = "split_hours"
-  )
-
-model_year_monthly <- model_year_long %>%
+  ) %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
-  summarise(total_hours = sum(split_hours), .groups = "drop")
-
-ggplot(model_year_monthly, aes(x = month, y = total_hours, fill = hour_set)) +
+  summarise(
+    total_hours = sum(split_hours), 
+    .groups = "drop") %>%
+  ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
   geom_col(color = "#ffffff",
            position = position_stack(reverse = TRUE)
            ) +
@@ -431,72 +428,258 @@ ggplot(model_year_monthly, aes(x = month, y = total_hours, fill = hour_set)) +
   labs(title = "Monthly Total Hours",
        x = "",
        y = "") +
-  theme_minimal() 
+  theme_minimal()
 ```
 
 ## Model Year Review
 
+With both sets of adjustments in place, you can see the resulting adjustments between 2024 and my model year--complete with my June vacation which was spent on 2nd draft work and remained as is. \<weekly view also means I now have trailing partial weeks start/end of year throwing off calcs...
+
 ```{r model year weekly, fig.height=3, fig.width=12}
 
-model_year_weekly <- model_year_daily %>%
-  group_by(week_ending) %>%
+model_year_monthly <- model_year_daily %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month) %>%
   summarise(
-    total_adj_hours = sum(sched_adjust_hours), 
-    total_orig_hours = sum(total_original_hours), 
+    orig_hours = sum(total_original_hours), 
+    adj_hours = sum(sched_adjust_hours), 
     .groups = "drop")
 
-ggplot(model_year_weekly, aes(x = week_ending, y = total_orig_hours)) +
+ggplot(model_year_monthly, aes(x = month, y = orig_hours)) +
   geom_col(color = "#ffffff",
            fill = base_color
            ) +
+  ylim(0, 80) +
   labs(title = "2024 Original Weekly Total Hours",
        x = "",
        y = "") +
   theme_minimal() 
 
-ggplot(model_year_weekly, aes(x = week_ending, y = total_adj_hours)) +
+ggplot(model_year_monthly, aes(x = month, y = adj_hours)) +
   geom_col(color = "#ffffff",
            fill = base_color
            ) +
+  ylim(0, 80) +
   labs(title = "Adjusted Model Year Weekly Total Hours",
        x = "",
        y = "") +
   theme_minimal() 
 
-baseline_total = sum(model_year_weekly$total_orig_hours, na.rm=TRUE)
-baseline_mean = mean(model_year_weekly$total_orig_hours, na.rm=TRUE)
-baseline_median = median(model_year_weekly$total_orig_hours, na.rm=TRUE)
+baseline_total = sum(model_year_monthly$orig_hours, na.rm=TRUE)
+baseline_weekly_average = baseline_total / 366 * 7 #2024 was a leap year
 
 
-adjusted_total = sum(model_year_weekly$total_adj_hours, na.rm=TRUE)
-adjusted_mean = mean(model_year_weekly$total_adj_hours, na.rm=TRUE)
-adjusted_median = median(model_year_weekly$total_adj_hours, na.rm=TRUE)
+adjusted_total = sum(model_year_monthly$adj_hours, na.rm=TRUE)
+adjusted_weekly_average = adjusted_total / 366 * 7 
 ```
 
-With both sets of adjustments in place, my model year consists of
+With both sets of adjustments in place, my model year consists of \<todo - should I round to .25 or not? and have the incremental build up to the new number?\>
 
-|              | 2024   | Model  | Reduction |
-|:-------------|:-------|:-------|:----------|
-| Weekly mean  | 9.5    | 8      | -1.5      |
-| Yearly total | 554.25 | 432.25 | -122      |
+|              | 2024   | Reduction | Model  |
+|:-------------|:-------|:----------|:-------|
+| Yearly total | 554.25 | -122      | 432.25 |
+| Weekly mean  | 10.60  | -2.33     | 8.27   |
 
-## What ifs
+When I have been primarily featuring my data in a monthly cadence up to this point to show larger trends, I zoomed into a weekly level for my goals as I have found that to be an easier target \<wordsmith revisit - \>
 
-To identify experiments I could run to hit my model year numbers, I ran what if scenarios against my lower 2025 data set to see which ones might have allowed me to hit my model year output.
+# What ifs
 
-1)  No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 all days. There were \_\_\_ skip days in 2025, in February, **, and** .
+To identify experiments I could run to hit my model year goal, I ran what if scenarios against my lower productivity 2025 data set to see which experiment might have allowed me to hit my model year output.
+
+```{r 2025 daily baseline, fig.height=3, fig.width=12}
+
+y_25_daily <- timesheet_complete %>%
+  filter(year(date) == 2025) %>%
+  group_by(date) %>%
+  summarise(
+    total_orig_hours = sum(Hours), 
+    .groups = "drop") %>%
+  mutate(
+    # Calculate days to add to reach Sunday - weekday 0
+    # If the current day is Sunday (0), add 0 days. If Saturday (6), add 1 day, etc.
+    week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7
+  )
+
+baseline_total = sum(y_25_daily$total_orig_hours, na.rm=TRUE)
+baseline_weekly_average = baseline_total / 365 * 7 
+
+```
+
+1)  No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 all days. I skipped writing 57 days in 2025 - the bulk of them during a period from January to February, and another period from May to June.
+
+```{r Skip Days, fig.height=3, fig.width=12}
+
+y_25_daily$skip_adjust_hours = ifelse(y_25_daily$total_orig_hours == 0, 
+                                             0.25, y_25_daily$total_orig_hours)
+
+y_25_daily$skip_adjust_change = y_25_daily$skip_adjust_hours - y_25_daily$total_orig_hours 
+
+y_25_daily %>%
+  pivot_longer(
+      cols = c(skip_adjust_hours, skip_adjust_change),
+      names_to = "hour_set",
+      values_to = "split_hours"
+  ) %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month, hour_set) %>%
+    summarise(
+      total_hours = sum(split_hours),
+      .groups = "drop") %>%
+  ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
+  geom_col(color = "#ffffff"
+           ) +
+  scale_fill_manual(
+    values = c("skip_adjust_change" = highlight_c, "skip_adjust_hours" = base_color),
+    labels = c("Change", "Adjusted Hours")
+    ) +
+  labs(title = "No Skip Days",
+       x = "",
+       y = "") +
+  theme_minimal()
+
+skip_total = sum(y_25_daily$skip_adjust_hours, na.rm=TRUE)
+skip_weekly_average = skip_total / 365 * 7 
+
+```
 
 2)  Half Hour Minimum What if I had maintained my streak and also written at least 0.5 hours each day?
 
-3)  2 Writing Days What if I wrote at least 1.5 hours on at least two days a week? Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I made sure to put in the extra writing time at least one more day during the week. To do this I added a Saturday 1.5 hour session to all weeks that only had one day already meeting the criteria. And a Wednesday and Saturday sessions to weeks that had no day meeting the criteria.
+```{r Half Hour Min, fig.height=3, fig.width=12}
 
-4)  Writing Vacations What if I took time off from work with the express purpose of spending a large portion of that day writing (aiming for a 4 hour day).
+y_25_daily$min_adjust_hours = ifelse(y_25_daily$total_orig_hours < 0.5, 
+                                             0.5, y_25_daily$total_orig_hours)
 
-<Sum up table at the end>
+y_25_daily$min_adjust_change = y_25_daily$min_adjust_hours - y_25_daily$total_orig_hours 
 
-<in words summary/review> ….I was surprised to see the minimal impact skip days had to the overall numbers, but knowing that when I stop a habit it is harder to pick it back up, I chose to keep that as part of my goal.
+y_25_daily %>%
+  pivot_longer(
+      cols = c(min_adjust_hours, min_adjust_change),
+      names_to = "hour_set",
+      values_to = "split_hours"
+  ) %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month, hour_set) %>%
+    summarise(
+      total_hours = sum(split_hours),
+      .groups = "drop") %>%
+  ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
+  geom_col(color = "#ffffff"
+           ) +
+  scale_fill_manual(
+    values = c("min_adjust_change" = highlight_c, "min_adjust_hours" = base_color),
+    labels = c("Change", "Adjusted Hours")
+    ) +
+  labs(title = "Half Hour Minimum",
+       x = "",
+       y = "") +
+  theme_minimal()
 
-## The Plan:
+min_total = sum(y_25_daily$min_adjust_hours, na.rm=TRUE)
+min_weekly_average = min_total / 365 * 7 
+
+```
+
+3)  Two Writing Days What if I wrote at least 1.5 hours on at least two days a week?
+
+Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either the Wednesday, Saturday, or both days to meet the 2 day requirement.
+
+```{r Twice Weekly, fig.height=3, fig.width=12}
+#  note partial weeks at start and end of year already met criteria so no 
+#  special casing was needed to prevent adding hours for a day in 2024 or 2026
+
+twice <- y_25_daily %>% 
+  mutate(
+    day_of_week = weekdays(date),
+    # Calculate days to add to reach Sunday - weekday 0
+    # If the current day is Sunday (0), add 0 days. If Saturday (6), add 1 day, etc.
+    week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7
+  ) %>%
+  pivot_wider(
+    id_cols = week_ending,
+    names_from = day_of_week, 
+    values_from = total_orig_hours)
+
+threshold <- 1.5
+
+twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
+                                      "Wednesday", "Thursday" , 
+                                      "Friday" , "Saturday" , "Sunday")],
+                            1, function(row) sum(row >= threshold, na.rm = TRUE))
+twice$adjust <- ifelse(twice$weekly_count < 2, TRUE, FALSE)
+
+#assign Wednesdays
+twice$Wednesday <- ifelse(twice$adjust & twice$Wednesday <= threshold, threshold, twice$Wednesday)
+
+#reassess remaining
+twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
+                                      "Wednesday", "Thursday" , 
+                                      "Friday" , "Saturday" , "Sunday")],
+                            1, function(row) sum(row >= threshold, na.rm = TRUE))
+twice$adjust <- ifelse(twice$weekly_count < 2, TRUE, FALSE)
+#assign Saturdays
+twice$Saturday <- ifelse(twice$adjust & twice$Saturday <= threshold, threshold, twice$Saturday)
+
+#pivot back to tall
+twice <- twice %>%
+  pivot_longer(
+    cols =  c("Monday", "Tuesday", 
+              "Wednesday", "Thursday" , 
+              "Friday" , "Saturday" , "Sunday"),
+    names_to = "day_of_week",
+    values_to = "twice_adjusted_hours"
+  )
+
+days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3, 
+             "Friday"=2, "Saturday"=1, "Sunday"=0)
+twice$date <- twice$week_ending - days_from_sun[twice$day_of_week]
+
+y_25_daily_with_twice <- merge(y_25_daily, twice[, c("date", "twice_adjusted_hours")], by = "date")
+y_25_daily_with_twice$twice_adjust_change <- y_25_daily_with_twice$twice_adjusted_hours - y_25_daily_with_twice$total_orig_hours 
+
+
+y_25_daily_with_twice %>%
+  pivot_longer(
+      cols = c(twice_adjusted_hours, twice_adjust_change),
+      names_to = "hour_set",
+      values_to = "split_hours"
+  ) %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month, hour_set) %>%
+    summarise(
+      total_hours = sum(split_hours),
+      .groups = "drop") %>%
+  ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
+  geom_col(color = "#ffffff"
+           ) +
+  scale_fill_manual(
+    values = c("twice_adjust_change" = highlight_c, "twice_adjusted_hours" = base_color),
+    labels = c("Change", "Adjusted Hours")
+    ) +
+  labs(title = "Two Writing Days",
+       x = "",
+       y = "") +
+  theme_minimal()
+
+twice_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm=TRUE)
+twice_weekly_average = twice_total / 365 * 7
+
+```
+
+4)  Writing Vacations What if I took time off from work with the express purpose of spending a large portion of that day writing?
+
+For this one, I did not create a chart, but rather tables to assessed the potential impact.
+
+Given `n` number of writing vacations days and `h` additional hours worked on those days The total yearly increase would be `h * n` And the weekly mean change as a result would be `h * n / 365 * 7`
+
+The resulting tables:
+
+![](images/placeholder_writing_vacations.png)
+
+## The results
+
+![](images/Comparisons.png)
+
+# The Plan:
 
 Based on all of the above, I decided to set my 2026 goals to be: Maintain a daily writing streak without skip days ? Write a minimum of 1 hour twice a week (No set days - but this will likely be one weekend day and Wednesdays--since I attend a weekly writing meet up that day) ?
 
