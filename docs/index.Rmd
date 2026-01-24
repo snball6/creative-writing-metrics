@@ -20,39 +20,33 @@ timesheet_complete <- timesheet %>%
   filter(!is.na(date)) %>%
   complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Time = "N/A", Category = "N/A", Project = "N/A", Sub.Project = ""))
 
-#5 color palette
-#003f5c
-#58508d
-#bc5090
-#ff6361
-#ffa600
+lt_blue = "#b6ddf6"
+md_blue = "#7AA6C2"
+dk_blue = "#004c6d"
+
 ```
 
-<Placeholder for opening graphic>
+\<Placeholder for opening graphic - possible weekly hours bar chart?\>
 
 # Summary
 
-\<revise when analysis complete to incorporate high level summary\>
-
-This is a personal project I created to demonstrate my analytical and technical proficiency applied to my creative writing process. My goal was to look for trends in the data and identify lead metrics that drive consistent output and provide myself with a data-driven roadmap for continued growth.
-
 With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by my software development work at Menlo Innovations.
 
-From this data, I created visualizations to help contextualize the numbers, enriched my findings with additional data sources to expand that narrative, and created a dashboard for daily tracking of progress on experiments I am running to increase my writing output.
+For this project, I applied my analytical and technical skills to my creative writing process to identify trends or insights present in my historical metrics that I could use to inform my writing habits going forward.
+
+I created visualizations to help contextualize the numbers, enriched my findings with additional data sources to expand the narrative, and ultimately created a dashboard for daily tracking of progress on experiments I am running to increase my writing output and identified additional data I want to collect going forward.
 
 # Quick Links
 
-Looking for examples of how I used a specific tool or technologies? Follow these links to jump to the relevant section or supplementary resource:
+Looking for examples of how I used specific tools or technologies? Follow these links to jump to the relevant section:
 
 -   [**Spreadsheets**](#spreadsheets) - pivot tables, charts, and formulas
 
--   [**Python & Data Cleaning**](#python-and-data-cleaning) - script used to extract and clean supplemental data
+-   [**Python & Data Cleaning**](#python-and-data-cleaning) - python script used to extract, clean, and visualize supplemental schedule data
 
--   **R** - this web page was made using R Markdown and most of the visuals were made using the ggplot2 library
+-   <todo>**R** - this web page was made using R Markdown and most of the plots were made using the ggplot2 library
 
--   TBD: **Tableau** - I made a live dashboard to track my core metrics
-
--   TBD: **Power BI** -
+-   <todo>**Tableau** - I made a live dashboard to track my 2026 goals
 
 # Main Data Structure
 
@@ -60,9 +54,9 @@ My creative writing timesheet is tracked in a Google Sheets and there are five f
 
 -   Day - when the writing occurred. There can be multiple entries for the same day logged against different projects (such as August 10th in the example below)
 
--   Hours - tracked in [15 minute increments](#why-15-minutes "for why 15 minutes") or 0.25 of an hour
+-   Hours - [active writing time](#active-writing-time "Details on what hours I count") tracked in [15 minute increments](#why-15-minutes "Why 15 minutes") or 0.25 of an hour
 
--   Category - broad [categorization](#category-explanation "For more on what each category means") about the type of writing activity
+-   Category - broad [categorization](#category-explanation "What each category means") about the type of writing activity
 
 -   Project - a shortened title of the story
 
@@ -70,23 +64,42 @@ My creative writing timesheet is tracked in a Google Sheets and there are five f
 
 ![](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
-Prior to this personal project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. (For details, see [Spreadsheets](#spreadsheets))
+Prior to this analysis project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts within the same Google Sheet. For details, see [Spreadsheets](#spreadsheets) in the appendix.
 
 # The Goal {#the-goal}
 
-My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal. Last year, going into 2025, I had set myself the goal of writing at least an hour most days (a mode of 1 hour or higher). At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
+<gray monthly chart>
+
+My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal.
+
+Last year, going into 2025, I had set myself the goal of writing at least an hour most days, that is a mode of 1 hour or higher. At the time, it seemed a safe increase to push myself towards given my success in 2024. But in execution, 2025 fell far short.
+
+\<todo: use facet wrap to make side by side + remove mean.
 
 ```{r 2024 histogram, fig.height=4, fig.width=12}
-year_2024 <- timesheet_complete %>%
-  filter(year(date) == 2024) %>%
+y_24_25_date_grouped <- timesheet_complete %>%
+  filter(year(date) == 2024 | year(date) == 2025) %>%
   group_by(date) %>%
   summarise(sum_hours = sum(Hours))
 
-year_2024$highlight <- ifelse((year_2024$sum_hours == 0.5 
-                                | year_2024$sum_hours == 1.25),
+y_24_25_date_grouped$year_s <- format(y_24_25_date_grouped$date, "%Y")
+y_24_25_date_grouped$highlight <- ifelse(
+                  # mark 2024 mode and median
+                  (year(y_24_25_date_grouped$date) == 2024 &
+                     (y_24_25_date_grouped$sum_hours == 0.5 |   
+                        y_24_25_date_grouped$sum_hours == 1.25)) |
+                  # mark 2025 mode and median
+                    (year(y_24_25_date_grouped$date) == 2025 &
+                     (y_24_25_date_grouped$sum_hours == 0.25 |   
+                        y_24_25_date_grouped$sum_hours == 0.5)),
                               "Highlighted", "Normal")
 
-ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
+facet_labeller <- as_labeller(c(
+  "2024" = "2024 - Mode: 0.50 and Median 1.25",
+  "2025" = "2025 - Mode: 0.25 and Median 0.50"
+))
+
+ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
   geom_histogram(
     binwidth = 0.25,
     boundary = 0,
@@ -94,158 +107,26 @@ ggplot(year_2024, aes(x = sum_hours, fill=highlight)) +
     color = "#FFFFFF",
     show.legend = FALSE
     ) +
+  facet_wrap(~ year_s, labeller = facet_labeller) +
   coord_cartesian(xlim = c(0, 8)) +
-  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
+  scale_fill_manual(values = c("Highlighted" = dk_blue, "Normal" = md_blue)) +
   theme_minimal() +
+  theme(
+    plot.title = element_text(size = 15)
+    ) + 
   labs(
-    title = "2024",
+    title = "Distribution of writing session length",
     x = "Hours written",
     y = "Number of days"
-  ) +
-  annotate("text",
-         x = 0.5 + .125, #center of bin
-         y = 52,
-         label = "Mode: 0.5",
-         size = 3) +
-  annotate("text",
-         x = 1.9, 
-         y = 35,
-         label = "Median: 1.25",
-         hjust = "left",
-         size = 3) +
-  annotate("curve",
-           x = 1.9 - 0.05,
-           y = 35,
-           xend = 1.25 +.125,
-           yend = 32,
-           arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text",
-         x = 2.2, 
-         y = 30,
-         label = "Mean: 1.51",
-         hjust = "left",
-         size = 3) +
-  annotate("curve",
-           x = 2.2 - 0.05,
-           y = 30,
-           xend = 1.52,
-           yend = 28.5,
-           arrow = arrow(length = unit(0.3, "cm"))) +
-  geom_segment(
-    aes(x=1.51, y=-2, xend=1.51, yend=28), 
-    linewidth = 0.5,
-    linetype = "dashed")
-```
+  ) 
 
-```{r 2025 histogram, fig.height=3, fig.width=12}
-
-year_2025 <- timesheet_complete %>%
-  filter(year(date) == 2025) %>%
-  group_by(date) %>%
-  summarise(sum_hours = sum(Hours))
-
-year_2025$highlight <- ifelse((year_2025$sum_hours == 0.25 
-                                | year_2025$sum_hours == 0.5),
-                              "Highlighted", "Normal")
-
-ggplot(year_2025, aes(x = sum_hours, fill=highlight)) +
-  geom_histogram(
-    binwidth = 0.25,
-    boundary = 0,
-    closed = "left",
-    color = "#FFFFFF",
-    show.legend = FALSE
-    ) +
-  coord_cartesian(xlim = c(0, 8)) +
-  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
-  theme_minimal() +
-  labs(
-    title = "2025",
-    x = "Hours written",
-    y = "Number of days"
-  ) +
-  annotate("text",
-         x = 0.25 + .125, #center of bin
-         y = 83 + 2,
-         label = "Mode: 0.25",
-         size = 3) +
-  annotate("text",
-         x = 0.5, 
-         y = 62,
-         label = "Median: 0.5",
-         hjust = "left",
-         size = 3) +
-  annotate("text",
-         x = 1.25, 
-         y = 55,
-         label = "Mean: 0.79",
-         hjust = "left",
-         size = 3) +
-  annotate("curve",
-          x = 1.25 - 0.05, 
-          y = 55, 
-          xend = 0.79 + .01,
-          yend = 41,
-          arrow = arrow(length = unit(0.3, "cm"))) +
-  geom_segment(
-    aes(x=0.79, y=-2, xend=0.79, yend=40), 
-    linewidth=0.5,
-    linetype = "dashed")
 ```
 
 # Behind the Data
 
-```{r quarterly totals, fig.height=4, fig.width=12}
-quarterly_totals <- timesheet_complete %>%
-  mutate(year_quarter = as.yearqtr(date)) %>% 
-  group_by(year_quarter) %>%                  
-  summarise(total_hours = sum(Hours)) %>%     
-  ungroup()
+To better inform why that goal fell short, let me unpack and contextualize my high output year.
 
-quarterly_totals$highlight <- ifelse(
-                  (floor
-                   (as.numeric(as.yearqtr(quarterly_totals$year_quarter))) == 2024),
-                              "Highlighted", "Normal")
-
-ggplot(quarterly_totals, aes(x = year_quarter, y = total_hours,  fill=highlight)) +
-  geom_col(color = "#ffffff", show.legend = FALSE) +
-  scale_fill_manual(values = c("Highlighted" = "#004c6d", "Normal" = "#7AA6C2")) +
-  labs(title = "Quarterly Total Hours",
-       x = "",
-       y = "Total Hours") +
-  theme_minimal() +
-  zoo::scale_x_yearqtr(format = "%Y Q%q", n = 99) + 
-  coord_cartesian(xlim = as.yearqtr(c("2023 Q1", "2025 Q4")))
-
-
-```
-
-Looking at my writing productivity per quarter for the last three years you can see that 2024 was by far my most successful period.
-
-```{r totals table}
-df <- data.frame(
-  Category = c("Q1", "Q2", "Q3", "Q4"),
-  y_2023 = c(63, 0, 28.5, 75),
-  y_2024 = c(173.5, 122.25, 145, 113.5),
-  y_2025 = c(57, 52.25, 92.5, 86.5)
-)
-
-df_with_total <- df %>%
-  bind_rows(tibble(
-    Category = "Total",
-    y_2023 = sum(.$y_2023),
-    y_2024 = sum(.$y_2024),
-    y_2025 = sum(.$y_2025)
-  ))
-
-kable(df_with_total, col.names = c("", "2023", "2024","2025")) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center") %>%
-  row_spec(5, bold = T, )
-```
-
-So should my 2026 goal be to repeat a 2024 level of hourly productivity? Not necessarily. There are stories behind those numbers--so first a quick overview, looking at the data at a more granular monthly cadence.
-
-![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
+\<ideal world - could this be interactive?\> ![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
 
 ```{r annotated timeline, fig.height=4, fig.width=12}
 timeline <- read.csv("data/timeline_annotated.csv")
@@ -294,7 +175,7 @@ ggplot(monthly_timeline, aes(x = year_month, y = total_hours,  fill=Timeline.cat
 
 -   [1st draft attempt - Jul 2023]{style="background-color:#5886a5; color:#FFFFFF; padding:5px; border-radius: 10px"} - I started writing a brand new story, but lost steam part way in.
 
--   [Raven 1st - Sep 2023]{style="background-color:#955196; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and used the 50k words in 30 days challenge to tackle a project I had been attempting to write for many years. September and October I wrote my new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
+-   [Raven 1st - Sep 2023]{style="background-color:#955196; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and used the 50k words in 30 days challenge to tackle a project I had attempted several times before, but had never finished a full draft. September and October I wrote my new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
 
 -   [Sorceress 3rd - Dec 2023]{style="background-color:#ff6e54; color:#FFFFFF; padding:5px; border-radius: 10px"} - Fresh off that success, I decided to do another rewrite on my Sorceress manuscript and attempt another round of querying.
 
@@ -302,92 +183,232 @@ ggplot(monthly_timeline, aes(x = year_month, y = total_hours,  fill=Timeline.cat
 
 -   [Sorceress 4th - R&R - Jan 2024]{style="background-color:#faa600; color:#FFFFFF; padding:5px; border-radius: 10px"} - An agent reached out with interest in the story. She gave me some suggest changes and requested I revise and resubmit. I invested all free time I had in getting the edits in and resubmitted in under 2 months. Unfortunately, the agent decided not to sign the project.
 
--   [Raven 2nd - Mar 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I eagerly dove into the 2nd draft of my Raven manuscript
+-   [Raven 2nd - Mar 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - Though dissapointed about Sorceress, I was I eager to dive back into the Raven manuscript and start the 2nd draft.
 
--   [Sorceress 5th - Jul 2024]{style="background-color:#01976C; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to give the Sorceress project one more go, revising it further and submitted another round of queries. No bites. I decided to shelve the manuscript for now.
+-   [Sorceress 5th - Jul 2024]{style="background-color:#01976C; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to give the Sorceress project one more go, revising it further and submitted another round of queries. No bites. I decided to shelve the manuscript.
 
 -   [Katarin 1st - Oct 2024]{style="background-color:#97014B; color:#FFFFFF; padding:5px; border-radius: 10px"} - For my 2nd year participating in NaNoWriMo, I worked on a much shorter project and managed the 50k goal in 23 days!
 
--   [Raven 2nd - Dec 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I was into the thick of the Raven rewrite. Not the fun and exciting clean up of the opening chapters, but the parts where I needed to address plot gaps, character motivations, and point of view.
+-   [Raven 2nd - Dec 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I was into the thick of the Raven rewrite. Not the fun and exciting opening chapters, but the messy middle where I needed to address plot gaps, character motivations, and point of view.
 
 **2025:**
 
--   [Pauses - Feb, May, and Jun 2025]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - In order to focus on online certification, a job search, and later adjusting to a new job, I let my morning writing habit lapse.
+-   [Pauses - Feb, May, and Jun 2025]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - In order to focus on career certification, a job search, and later adjusting to a new job, I put my daily writing habit on pause.
 
--   [Raven 2nd - Jul 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I was getting back into the morning habit again, but still working on tricky parts of the my manuscript
+-   [Raven 2nd - Jul 2024]{style="background-color:#dd5182; color:#FFFFFF; padding:5px; border-radius: 10px"} - I resumed my daily writing habit again, but was still working on tricky parts of the manuscript.
 
 -   [Katarin 2nd - Oct 2024]{style="background-color:#015697; color:#FFFFFF; padding:5px; border-radius: 10px"} - Instead of a NaNoWriMo rough draft, I decided to spend November working on Katarin's 2nd draft, and kept going on it through the end of the year.
 
 **So in summary:**
 
-2023 I was just getting into the swing of writing on a consistent and daily basis.
+-   In 2023, I was just getting into the swing of writing on a consistent and daily basis and gained momentum through NaNoWriMo going into the next year.
 
-2024 included highly engaging projects like my Sorceress 4th and 5th drafts, the early stages of my Raven 2nd draft, and a quick rough draft.
+-   In 2024, I worked on highly engaging projects like my Sorceress 4th and 5th drafts, the early stages of my Raven 2nd draft, and a quick rough draft.
 
-2025 was spent almost exclusively on the harder stages of the Raven 2nd draft with several breaks to accomodate life events in the first half of the year. I saw a spike in my hours when I began work on the Katarin 2nd draft.
+-   In 2025, I worked almost exclusively on the harder stages of the Raven 2nd draft with several breaks to accommodate life events in the first half of the year. My hours increase some when I began work on the Katarin 2nd draft.
 
-# Apples to Oranges
+# Building a Model Year
 
-Given the differences, instead of taking 2024 whole sale as my model year, I want to use it as a starting point, but correct for expected differences between 2024 and my anticipated 2026.
+Given the differences, instead of taking 2024 for my model year as-is, I decided to use it as only a starting point and by correcting for expected differences between 2024 and my anticipated 2026 approximate a better model.
 
 ## Category Impact
 
-The first high-impact factor I saw was the type of writing I was doing in 2024. It is easier for me to have longer writing sessions when working on 3rd and later drafts. Much of the writing time is rereading existing chapters to validate consistency and continuity. 2nd drafts by contrast are high-intensity and I often need frequent breaks. I would compare 3rd+ drafts to a long walk and 2nd drafts to a sprint that at certain points in the project is also up hill. Below is the normalized distribution of 1st, 2nd, and 3rd+ draft writing entries illustrating the longer writing sessions.
+The first high-impact factor was the type of writing I was doing in 2024. It is easier for me to have longer writing sessions when working on 3rd and later drafts.
 
 ```{r category histogram, fig.height=3, fig.width=12}
 
+cat_hist <- timesheet_complete %>%
+  filter(Category %in% c("2nd Draft", "3rd+ Draft"))
 
+second_median = median(cat_hist$Hours[cat_hist$Category == "2nd Draft"], na.rm = TRUE)
+third_plus_median = median(cat_hist$Hours[cat_hist$Category == "3rd+ Draft"], na.rm = TRUE)
 
-timesheet_complete %>%
-  filter(Category %in% c("1st Draft", "2nd Draft", "3rd+ Draft")) %>%
-  ggplot(aes(x = Hours, fill=Category)) +
+#todo see if there is a way for this to work without breaking normalization later
+cat_hist$highlight <- ifelse(
+                  # mark 2nd median
+                  (cat_hist$Category == "2nd Draft" &
+                    cat_hist$Hours == second_median) |
+                  # mark 3rd+ median
+                  (cat_hist$Category == "3rd+ Draft" &
+                    cat_hist$Hours == third_plus_median),
+                  "Highlighted", "Normal"
+                  )
+
+facet_labeller <- as_labeller(c(
+  "2nd Draft" = sprintf("2nd Draft - Median %.2f", second_median),
+  "3rd+ Draft" = sprintf("3rd+ Draft - Median %.2f",third_plus_median)
+))
+
+cat_hist %>%
+  filter(Category %in% c("2nd Draft", "3rd+ Draft")) %>%
+  ggplot(aes(x = Hours)) +
   geom_histogram(
-    binwidth = 0.5,
+    binwidth = 0.25,
     boundary = 0,
     closed = "left",
     color = "#FFFFFF",
+    fill=md_blue,
+    show.legend = FALSE,
+    position = 'identity',
     aes(y = after_stat(density))
     ) +
+  facet_wrap(~ year_s, labeller = facet_labeller) +
   labs(
-    title = "Writing session lengths 2023-2025",
+    title = "Normalized distribution of writing session length from 2023 to 2025",
     x = "Hours written",
     y = "Density"
   ) +
-  facet_wrap(~ Category)
-
-# timesheet_complete %>%
-#   filter(Category %in% c("1st Draft", "2nd Draft", "3rd+ Draft")) %>%
-#   ggplot(aes(x = date, y = Hours, color = Category)) +
-#     geom_point(alpha = .25)
+  theme_minimal() +
+  facet_wrap(~ Category, labeller = facet_labeller)
 ```
 
-I do not plan to work on a 3rd or later draft in 2026. To approximate this difference, I took my 2024 starting data set and replace my 3rd+ draft writing sessions with my median 2nd draft writing sessions from that year (\_\_\_\_). This created the following reduction:
+```{r category histogram 2024, fig.height=3, fig.width=12}
 
-<Placeholder reduction graph>
+cat_hist <- timesheet_complete %>%
+  filter(Category %in% c("2nd Draft", "3rd+ Draft") 
+         & year(date) == 2024)
+
+second_median = median(cat_hist$Hours[cat_hist$Category == "2nd Draft"], na.rm = TRUE)
+third_plus_median = median(cat_hist$Hours[cat_hist$Category == "3rd+ Draft"], na.rm = TRUE)
+
+#todo see if there is a way for this to work without breaking normalization later
+cat_hist$highlight <- ifelse(
+                  # mark 2nd median
+                  (cat_hist$Category == "2nd Draft" &
+                    cat_hist$Hours == second_median) |
+                  # mark 3rd+ median
+                  (cat_hist$Category == "3rd+ Draft" &
+                    cat_hist$Hours == third_plus_median),
+                  "Highlighted", "Normal"
+                  )
+
+facet_labeller <- as_labeller(c(
+  "2nd Draft" = sprintf("2nd Draft - Median %.2f", second_median),
+  "3rd+ Draft" = sprintf("3rd+ Draft - Median %.2f",third_plus_median)
+))
+
+cat_hist %>%
+  filter(Category %in% c("2nd Draft", "3rd+ Draft")) %>%
+  ggplot(aes(x = Hours)) +
+  geom_histogram(
+    binwidth = 0.25,
+    boundary = 0,
+    closed = "left",
+    color = "#FFFFFF",
+    fill="#7AA6C2",
+    show.legend = FALSE,
+    position = 'identity',
+    aes(y = after_stat(density))
+    ) +
+  facet_wrap(~ year_s, labeller = facet_labeller) +
+  labs(
+    title = "Normalized distribution of writing session length for 2025",
+    x = "Hours written",
+    y = "Density"
+  ) +
+  theme_minimal() +
+  facet_wrap(~ Category, labeller = facet_labeller)
+```
+
+Much of the writing time is spent rereading existing chapters to validate for consistency and continuity. 2nd drafts, by contrast, are high-intensity and I often need frequent breaks. I would compare 3rd+ drafts to a long walk and 2nd drafts to a sprint that is also sometimes uphill.
+
+Because I do not plan to work on a 3rd or later draft in 2026, I replaced all my 3rd+ writing draft sessions in the model with my median 2nd draft writing session length from 2024.
+
+```{r category corrected, fig.height=3, fig.width=12}
+model_year <- timesheet_complete %>%
+  filter(year(date) == 2024)
+
+model_year$cat_adjust_hours = ifelse(model_year$Category == "3rd+ Draft", 
+                                             1, 
+                                             model_year$Hours)
+model_year$cat_adjust_reduction = model_year$Hours - model_year$cat_adjust_hours
+
+model_year_long <- model_year %>%
+  pivot_longer(
+    cols = c(cat_adjust_hours, cat_adjust_reduction),
+    names_to = "hour_set",
+    values_to = "split_hours"
+  )
+
+model_year_monthly <- model_year_long %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month, hour_set) %>%
+  summarise(total_hours = sum(split_hours), .groups = "drop")
+
+ggplot(model_year_monthly, aes(x = month, y = total_hours, fill = hour_set)) +
+  geom_col(color = "#ffffff",
+           position = position_stack(reverse = TRUE)
+           ) +
+  scale_fill_manual(
+    values = c("cat_adjust_reduction" = lt_blue, "cat_adjust_hours" = md_blue),
+    labels = c("Adjusted Hours", "Reduction")
+    ) +
+  labs(title = "Monthly Total Hours",
+       x = "",
+       y = "") +
+  theme_minimal() 
+
+```
 
 ## Schedule Changes
 
-Another complicating factor to my data set is my work schedule. In 2024 I was working Menlo Innovations and had a 4 day a week 32 hour schedule. In April 2025, I switched to a 5 day schedule at Quantum Signal AI.
+Another complicating factor to my data set is my work schedule. In 2024 I was working at Menlo Innovations and had a 4 day a week schedule. In April 2025, I switched to a 5 day schedule at Quantum Signal AI. To adjust my model year, I wanted to calculate my median weekday versus weekend writing session length.
 
-\<no facet version?\>
+\<2024-2025 scatter\>
 
-My daily writing hours are also so variable, that I wanted to better understand which spikes were tied to high output vacation days. Scheduling a few writing-focused vacation days over the year could be a way to boost overall writing output. After enriching my timesheet data with information about my work schedule, the pattern was quickly apparent. (For more on how I sourced and cleaned my schedule data set from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning).)
+As you can see in the above, my writing hours are highly variable from day to day. I knew that the 8 hour spike in July 2024 occurred during a vacation week focused heavily on creative writing, but I did not know how many other high or low writing days could be tied to vacation time or sickdays. To determine this I enriched my dataset with more detailed information about my work schedule. (For more on how I sourced and cleaned my schedule data set from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning).)
 
-\<facet wrap distribution
+This data enrichment helped me confirm that paid leave days in general--both sick day and vacation--could include high outliers or near-zero days. <explanation> I chose to exclude these days when calculating my median weekday writing speed: \_\_ hours.
 
-To approximate my 4 day to 5 day shift, replaced one weekend day a week with the median weekday writing sessions length for that year (\_\_\_\_). Which furthered the reduction.
+I then applied this as the new writing session length for every Sunday in my model because my weekend habit is usually to spend the first weekend day on chores and life admin tasks, and then do more hobby and creative tasks the next two days.
 
-\<todo: what about vacation spikes
+![](images/placeholder_schedule_adjustment.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680"}
 
 ## Model Year Review
 
-<look at the resulting stats I could target> <what those numbers might look like>
+With this adjustments in place, my model year consists of: \_\_\_ total hours per year \_\_\_ average hours per week
 
 ## What ifs
 
-<toggle on/off adjustments> -I had written the minimum .25 all days -Or if I raised that minimum to .5 -I had extra dedicated writing day a week (moderate 1-2 hr) -I had an extra highly dedicated writing day a month (4 hrs)
+Before using this model to frame goals for 2026, I wanted to run some what if scenarios against my 2025 data set to see if these scenarios might be candidates for ways to reach that model year output.
+
+1)  No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 all days. There were \_\_\_ skip days in 2025, in February, **, and** .
+
+2)  Half Hour Minimum What if I had maintained my streak and also written at least 0.5 hours each day?
+
+3)  2 Writing Days What if I wrote at least 1.5 hours on at least two days a week? Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I made sure to put in the extra writing time at least one more day during the week. To do this I added a Saturday 1.5 hour session to all weeks that only had one day already meeting the criteria. And a Wednesday and Saturday sessions to weeks that had no day meeting the criteria.
+
+4)  Writing Vacations What if I took time off from work with the express purpose of spending a large portion of that day writing (aiming for a 4 hour day).
+
+<Sum up table at the end>
+
+<in words summary/review> ….I was surprised to see the minimal impact skip days had to the overall numbers, but knowing that when I stop a habit it is harder to pick it back up, I chose to keep that as part of my goal.
 
 ## The Plan:
+
+Based on all of the above, I decided to set my 2026 goals to be: Maintain a daily writing streak without skip days ? Write a minimum of 1 hour twice a week (No set days - but this will likely be one weekend day and Wednesdays--since I attend a weekly writing meet up that day) ?
+
+I chose not to set an overarching grand-total for the year goal because I have found those lag metrics less motivating. For example, if I set a goal of reading "100 books a year", then have a month where I fall behind, it can make the rest of the year feel like a demotivating scramble to catch up. But if my goal is to read "about 2 books a week", I can always start a new week and feel like I am getting back on track with a lead-metric habit.
+
+I anticipate life events in 2026 might interrupt my habits like they did in 2025, so I am focusing on the small controllable targets on a weekly and monthly cadence.
+
+## Tracking Dashboard:
+
+I create a Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals.
+
+As of the time of my writing this (1/\_\_/2026), my prior weeks have not been near my new goals. Unsurprising since I had not even established the goals yet--and had focused most of my free time on this analysis.
+
+Now that I have a centralized place to see how I am doing, I can make informed decisions to course correct and try new experiments if necessary.
+
+## Further Analysis:
+
+### Timing:
+
+One experiment + metric that I added is not yet backed by any concrete data set: writing multiple times per day. Prior this year, I only tracked my writing time down to the day. If I wrote 1 in the morning and 0.75 in the evening, I might enter the data in my timesheet as =1+.75, but there was no indication these were two different sessions or when they happened. I might be just as likely to enter that formula if I had done an hour morning writing session--usually tracked with a simple egg-timer--then decided to attempt a second hour right after it, which I ended early. I also was not particularly careful not to copy/paste-as-value over these summarized days when transferring entries between old and new timesheet templates. The formula was only used for ease of data entry.
+
+Which means I cannot say if my productive writing days were made out of lots of little sessions or several long sessions. If mornings were more impactful, or evenings. For 2026, I hope to prime myself to answer those questions.
+
+I also now have a dedicated spreadsheet tracking my work schedule so I can keep using that data to inform my dashboard, rather than needing to periodically export and categorize the data from the current payroll application.
 
 # Appendix
 
@@ -433,9 +454,17 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 -   **Combo Chart** - like xlookup, I do not have an example in the shared document, but this is another of my go-tos. For rewrite projects, I track how many pages in I am on a given day. This allows me to better visualize when I have to double back to earlier in the manuscript. I include hours written on a second access because I like seeing how the two relate to one another. Sometimes my "pages in" barely moves when I am hard at work on a difficult scene, but I can see that I was still putting in a lot of time. Below is a screenshot of what this looks like for the Raven project. In it you can see that I frequently had to double back around the 80 page mark to ensure I had the right setup for a particularly difficult scene.
 
-![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+## ![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
-------------------------------------------------------------------------
+## Active Writing Time {#active-writing-time}
+
+I only count time when I am intentionally sitting down to write, rewrite, or brainstorm on a project.
+
+I do not track time spent thinking about my writing while doing other things. For instance, going out for a walk and mulling over a problem or mentally narrating a scene during my morning commute. I do not count those times mostly because they are harder to quantify. That morning commute narration will start and stop frequently--as traffic requires more or less of my focus--and my mind will wander to plenty of other things as I walk. The precise number of minutes that were *actually* spent on writing is debatable.
+
+However, I do not want to discount those non-active writing activities. Many of my break through decisions on a plot problem or characterization happen outside of active-writing time. As my data set grows I hope to revisit the question of the importance of non-active writing time and necessary breaks between writing session.
+
+I would hypothesize there is an ideal ratio or at least an upper bounds of how many active hours I can put in before stepping away is necessary to make forward progress. For example, my Raven 1st draft took a total of 50 hours to complete, but that time was spread out over the course of 80 days. I do not think I would have been able to condense all that work into 2 work weeks, even if I had a clear schedule to focus only on writing for that period.
 
 ## Why 15 minutes? {#why-15-minutes}
 
@@ -496,3 +525,48 @@ One file I knew was missing before I even started my analysis. I decided to make
 If I had found that there was outlier data in that week or I had more missing weeks in the data set, I would have introduced an "unknown" category to help distinguish these days.
 
 ### Additional Validation
+
+## Off day subcategories {#off-day-subcategories}
+
+<placeholder> In my initial parsing of the data I had even more finite categories, but when reviewing the data that level of granularity did not add additional insights...
+
+```{r paid leave histograms, fig.height=3, fig.width=12}
+schedule <- read.csv("data/combined_workday_schedule.csv")
+schedule$date <- as.Date(schedule$date, format = "%Y-%m-%d")
+
+# Note look into the distributions different when I expand outside of 2024, but my skip day skew in 2023 might be a factor
+merged <- left_join(year_2024_baseline, schedule, by ="date")
+merged <- merged %>% 
+  mutate(schedule_type = case_when(
+    schedule_category == "holiday" ~ "paid leave",
+    schedule_category == "sickday" ~ "paid leave",
+    schedule_category == "vacation" ~ "paid leave",
+    schedule_category == "weekend" ~ "weekend",
+    schedule_category == "workday" ~ "workday",
+  )
+)
+
+ggplot(merged, aes(x = Hours, fill=schedule_category)) +
+  geom_histogram(
+    binwidth = 0.25,
+    boundary = 0,
+    closed = "left",
+    color = "#FFFFFF",
+    show.legend = FALSE,
+    aes(y = after_stat(density))
+    ) +
+  theme_minimal() +
+  labs(
+    title = "2024",
+    x = "Hours written",
+    y = "Density"
+  ) +
+  facet_wrap(~ schedule_category)
+
+```
+
+<picture> Sick days, vacation days, and holidays were useful to identify outliers, but the distribution of each did not vary from one another as much as I had originally hypothesized. The reason for this, I believe, are two fold. For vacation days, I do not focus all my vacation days on creative writing--I might just as like be traveling or doing other activities that take up more time and result in a lower writing output. For sick days, I can think of a few occasions that might account for high output days. A typical one would be that I called out sick from work due to a migraine and spent most of the morning in bed, but if I was feeling recovered enough by early or late afternoon, I probably would spend that time writing.
+
+## What do you write? Are you published?
+
+I write primarily fiction, usually in the adult fantasy or Sci Fi genres. I'm not published yet, but ultimately finding an agent and a traditional publisher for my books is my goal!
