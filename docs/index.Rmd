@@ -263,6 +263,7 @@ cat_hist %>%
   theme_minimal() +
   facet_wrap(~ Category, labeller = facet_labeller)
 ```
+
 Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all my 3rd+ writing draft sessions in the model with my median 2nd draft writing session length of 0.75.
 
 I also identified three outlier writing sessions in the query category.
@@ -289,24 +290,41 @@ cat_hist %>%
   ) +
   theme_minimal()
 ```
-While I usually spend between a quarter and a half hour on querying every few weeks maintaining a list of potential agents for the projects I am working on, it would be unusual for me to spend any longer sessions on the task in 2026 unless I was working on querying material for a specific project. Since I do not plan to do so, I also replaced these days writing sessions with my 2nd draft median.
 
-TODO: address 1st draft plans
+While I usually spend between a quarter and a half hour on querying every few weeks maintaining a list of potential agents for the projects I am working on, it would be unusual for me to spend any longer sessions on the task in 2026 unless I was working on querying material for a specific project. Since I do not plan to have a manuscript reaching that level of completion in 2026, I also replaced these writing sessions with my 2nd draft median.
 
 ```{r category corrected, fig.height=3, fig.width=12}
+
 model_year <- timesheet_complete %>%
   filter(year(date) == 2024)
 
-model_year$cat_adjust_hours = ifelse(
-                                (model_year$Category == "3rd+ Draft") |
-                                (model_year$Category == "Querying" &
-                                   model_year$Hours > 2), 
+# collect totals of incremental adjustments
+model_adjustments <- data.frame(type = c("2024 Original"),
+                                yearly_total = c(sum(model_year$Hours, na.rm=TRUE)))
+
+# 3rd draft adjustment
+model_year$cat_adjust_hours = ifelse(model_year$Category == "3rd+ Draft", 
                                              0.75, model_year$Hours)
 
+model_adjustments <- rbind(model_adjustments, data.frame(
+  type ="3rd+ draft replaced",
+  yearly_total = sum(model_year$cat_adjust_hours, na.rm=TRUE)
+))
+
+# Query adjustment
+model_year$cat_adjust_hours = ifelse(model_year$Category == "Querying" 
+                                     & model_year$Hours > 2, 
+                                             0.75, model_year$cat_adjust_hours)
+
+model_adjustments <- rbind(model_adjustments, data.frame(
+  type ="Querying replaced",
+  yearly_total = sum(model_year$cat_adjust_hours, na.rm=TRUE)
+))
+
+#diff for plotting stacked
 model_year$cat_adjust_diff = model_year$Hours - model_year$cat_adjust_hours
 
 model_year %>%
-  # pivot long so I can stack adjusted and diff
   pivot_longer(
     cols = c(cat_adjust_hours, cat_adjust_diff),
     names_to = "hour_set",
@@ -342,8 +360,6 @@ model_year %>%
 
 Another complicating factor to my data set was my work schedule. In 2024, I was working a 4 day a week schedule at Menlo Innovations. In April 2025, I switched to a 5 day schedule at Quantum Signal AI. To adjust my model year, I wanted to calculate my median weekday versus weekend writing session length, while also considering outliers in the data.
 
-\<TODO - get monthly labels\>
-
 ```{r daily_scatter, fig.height=3, fig.width=12}
 
 # group by day - across categories
@@ -367,7 +383,7 @@ model_year_daily %>%
   labs(title = "Daily writing session length - 2024 actuals",
        x = "",
        y = "Hours") +
-  theme_minimal()+
+  theme_minimal() +
   scale_x_date(
     date_breaks = "1 month",
     date_labels = "%b %Y",  
@@ -375,7 +391,8 @@ model_year_daily %>%
   )
 
 ```
-As you can see in the above, my writing hours are highly variable from day-to-day. I knew that the spike up to 8 hours in June 2024 occurred during a vacation week focused almost exclusively on creative writing, but I did not know how many other high or low writing days were on vacation or sick days. 
+
+As you can see in the above, my writing hours are highly variable from day-to-day. I knew that the spike up to 8 hours in June 2024 occurred during a vacation week focused almost exclusively on creative writing, but I did not know how many other high or low writing days were on vacation or sick days.
 
 To determine this I enriched my data set with information about my work schedule. For more on how I sourced and cleaned my schedule data from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning).
 
@@ -394,7 +411,6 @@ schedule <- schedule %>%
   ))
 
 merged <- left_join(model_year_daily, schedule, by ="date")
-# Added PTO granularity ultimately not needed
 
 pto_median = median(merged$total_original_hours[merged$schedule_type == "paid leave"], na.rm = TRUE)
 weekend_median = median(merged$total_original_hours[merged$schedule_type == "workday"], na.rm = TRUE)
@@ -427,9 +443,8 @@ merged %>%
   ) +
   theme_minimal()
 ```
-TODO: revisit wishy-washy part of this
 
-Because my weekend habit is usually to spend one day heavily focused on chores and life admin tasks, my weekend writing productivity usually varies. So instead of just replacing all Fridays or Sundays, I selected the highest of the three to replace with my workday median of 1.25.
+Because my weekend habit is usually to spend one day heavily focused on chores and life admin tasks, my weekend writing productivity usually varies from day-to-day. So instead of just replacing all Fridays or all Sundays, I selected the highest of the three to replace with my workday median of 1.25 if it was greater than the median.
 
 ```{r schedule corrected, fig.height=3, fig.width=12}
 # pivot out for week-wise logic
@@ -466,15 +481,23 @@ temp <- temp %>%
     values_to = "sched_adjusted_hours"
   )
 
+#calculate dates
 days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3, 
              "Friday"=2, "Saturday"=1, "Sunday"=0)
 temp$date <- temp$week_ending - days_from_sun[temp$day_of_week]
 
-model_year_daily <- merge(model_year_daily, temp[, c("date", "sched_adjusted_hours")], by = "date")
+model_year_daily_merged <- merge(model_year_daily, temp[, c("date", "sched_adjusted_hours")], by = "date")
 
-model_year_daily$sched_adjust_diff = model_year_daily$cat_adjust_hours - model_year_daily$sched_adjusted_hours
+model_adjustments <- rbind(model_adjustments, data.frame(
+  type ="Weekend shortened",
+  yearly_total = sum(model_year_daily_merged$sched_adjusted_hours, na.rm=TRUE)
+))
 
-model_year_daily %>%
+# diff for stack plotting
+model_year_daily_merged$sched_adjust_diff = model_year_daily_merged$cat_adjust_hours - 
+                                    model_year_daily_merged$sched_adjusted_hours
+
+model_year_daily_merged %>%
   pivot_longer(
     cols = c(sched_adjusted_hours, sched_adjust_diff),
     names_to = "hour_set",
@@ -494,90 +517,70 @@ model_year_daily %>%
   labs(title = "Monthly Total Hours",
        x = "",
        y = "") +
-  theme_minimal()
+  theme_minimal() + 
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
+  )
 
  
-# model_year_daily %>%
-#   pivot_longer(
-#     cols = c(sched_adjust_hours, sched_adjust_reduction),
-#     names_to = "hour_set",
-#     values_to = "split_hours"
-#   ) %>%
-#   mutate(month = floor_date(date, "month")) %>%
-#   group_by(month, hour_set) %>%
-#   summarise(
-#     total_hours = sum(split_hours), 
-#     .groups = "drop") %>%
-#   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
-#   geom_col(color = "#ffffff",
-#            position = position_stack(reverse = TRUE)
-#            ) +
-#   scale_fill_manual(
-#     values = c("sched_adjust_reduction" = reduct_c, "sched_adjust_hours" = base_color),
-#     labels = c("Adjusted Hours", "Reduction")
-#     ) +
-#   labs(title = "Monthly Total Hours",
-#        x = "",
-#        y = "") +
-#   theme_minimal()
 ```
 
 ## Model Year Review
 
-With both sets of adjustments in place, you can see the resulting adjustments between 2024 and my model year--complete with my June vacation which was spent on 2nd draft work and remained as is. \<weekly view also means I now have trailing partial weeks start/end of year throwing off calcs...
+With both sets of adjustments in place, you can see the resulting adjustments between 2024 and my model year.
+
+TODO: crop x scale short of 2025 - styling
 
 ```{r model year review, fig.height=3, fig.width=12}
 
-model_year_monthly <- model_year_daily %>%
+model_year_monthly <- model_year_daily_merged %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month) %>%
   summarise(
     orig_hours = sum(total_original_hours), 
-    adj_hours = sum(sched_adjusted_hours), 
+    post_adj_hours = sum(sched_adjusted_hours), 
     .groups = "drop")
 
-ggplot(model_year_monthly, aes(x = month, y = orig_hours)) +
+facet_labeller <- as_labeller(c(
+  "orig_hours" = "2024 actuals",
+  "post_adj_hours" = "Modified model year"
+))
+
+model_year_monthly %>%
+  pivot_longer(
+    cols = c(orig_hours, post_adj_hours),
+    names_to = "hour_set",
+    values_to = "split_hours"
+  ) %>%
+  # plot
+  ggplot(aes(x = month, y = split_hours)) +
   geom_col(color = "#ffffff",
            fill = base_color
            ) +
-  ylim(0, 80) +
-  labs(title = "2024 Original Total Hours",
+  facet_wrap(~ hour_set, labeller = facet_labeller) +
+  labs(title = "Total hours per month",
        x = "",
        y = "") +
   theme_minimal() 
 
-ggplot(model_year_monthly, aes(x = month, y = adj_hours)) +
-  geom_col(color = "#ffffff",
-           fill = base_color
-           ) +
-  ylim(0, 80) +
-  labs(title = "Adjusted Model Year Total Hours",
-       x = "",
-       y = "") +
-  theme_minimal() 
+model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 #2024 was a leap year
 
-baseline_total = sum(model_year_monthly$orig_hours, na.rm=TRUE)
-baseline_weekly_average = baseline_total / 366 * 7 #2024 was a leap year
-
-
-adjusted_total = sum(model_year_monthly$adj_hours, na.rm=TRUE)
-adjusted_weekly_average = adjusted_total / 366 * 7 
 ```
 
-With both sets of adjustments in place, my model year consists of \<todo - should I round to .25 or not? and have the incremental build up to the new number?\>
+I also broke down numerically the results of each modification.
 
-|              | 2024   | Reduction | Model  |
-|:-------------|:-------|:----------|:-------|
-| Yearly total | 554.25 | -122      | 432.25 |
-| Weekly mean  | 10.60  | -2.33     | 8.27   |
+|   | 2024 | 3rd Draft reduction | Querying reduction | Schedule reduction | New Model |
+|:-----------|:-----------|:-----------|:-----------|------------|------------|
+| **Yearly total** | 554.25 | -102.5 | -11 | -45.25 | 395.5 |
+| **Weekly mean** | 10.60 | -1.96 | -0.21 | -0.87 | 7.56 |
 
-405.25
-
-When I have been primarily featuring my data in a monthly cadence up to this point to show larger trends, I zoomed into a weekly level for my goals as I have found that to be an easier target \<wordsmith revisit - \>
+While I have primarily displayed my data on a monthly cadence up to this point, for the purposes of planning my goal, I am more interested in the more granular weekly measure, so I calculated the weekly mean based on the yearly total for each.
 
 # What ifs
 
-To identify experiments I could run to hit my model year goal, I ran what if scenarios against my lower productivity 2025 data set to see which experiment might have allowed me to hit my model year output.
+To identify experiments I could run to hit my model year goal, I ran what if scenarios against my lower productivity 2025 data set to see which adjustments might have allowed me to hit my model year output.
 
 ```{r 2025 daily baseline, fig.height=3, fig.width=12}
 
@@ -593,17 +596,26 @@ y_25_daily <- timesheet_complete %>%
     week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7
   )
 
-baseline_total = sum(y_25_daily$total_orig_hours, na.rm=TRUE)
-baseline_weekly_average = baseline_total / 365 * 7 
+what_if_adjustments <- data.frame(type = c("Starting point"),
+                                yearly_total = c(sum(y_25_daily$total_orig_hours, na.rm=TRUE)))
 
 ```
 
-1)  No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 all days. I skipped writing 57 days in 2025 - the bulk of them during a period from January to February, and another period from May to June.
+TODO: legend labels for all
+
+##1) No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 everyday. In 2025, I skipped writing 57 days - the bulk of them during the pause periods noted previously.
 
 ```{r Skip Days, fig.height=3, fig.width=12}
 
 y_25_daily$skip_adjust_hours = ifelse(y_25_daily$total_orig_hours == 0, 
                                              0.25, y_25_daily$total_orig_hours)
+
+
+what_if_adjustments <- rbind(what_if_adjustments, 
+                             data.frame(
+                               type ="No Skips",
+                               yearly_total = sum(y_25_daily$skip_adjust_hours, na.rm=TRUE)
+                            ))
 
 y_25_daily$skip_adjust_change = y_25_daily$skip_adjust_hours - y_25_daily$total_orig_hours 
 
@@ -628,19 +640,27 @@ y_25_daily %>%
   labs(title = "No Skip Days",
        x = "",
        y = "") +
-  theme_minimal()
-
-skip_total = sum(y_25_daily$skip_adjust_hours, na.rm=TRUE)
-skip_weekly_average = skip_total / 365 * 7 
+  theme_minimal() + 
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
+  )
 
 ```
 
-2)  Half Hour Minimum What if I had maintained my streak and also written at least 0.5 hours each day?
+##2) Raised Minimum What if I had maintained my daily writing streak and also raised my minimum to at least 0.5 hours every day?
 
 ```{r Half Hour Min, fig.height=3, fig.width=12}
 
 y_25_daily$min_adjust_hours = ifelse(y_25_daily$total_orig_hours < 0.5, 
                                              0.5, y_25_daily$total_orig_hours)
+
+what_if_adjustments <- rbind(what_if_adjustments, 
+                             data.frame(
+                               type ="Raised Minimum",
+                               yearly_total = sum(y_25_daily$min_adjust_hours, na.rm=TRUE)
+                            ))
 
 y_25_daily$min_adjust_change = y_25_daily$min_adjust_hours - y_25_daily$total_orig_hours 
 
@@ -665,16 +685,18 @@ y_25_daily %>%
   labs(title = "Half Hour Minimum",
        x = "",
        y = "") +
-  theme_minimal()
-
-min_total = sum(y_25_daily$min_adjust_hours, na.rm=TRUE)
-min_weekly_average = min_total / 365 * 7 
+  theme_minimal() + 
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
+  )
 
 ```
 
-3)  Two Writing Days What if I wrote at least 1.5 hours on at least two days a week?
+##3) Two Writing Days What if I wrote at least 1.5 hours on at least two days a week?
 
-Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either the Wednesday, Saturday, or both days to meet the 2 day requirement.
+Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either Wednesday, Saturday, or both days to meet the 2 day requirement.
 
 ```{r Twice Weekly, fig.height=3, fig.width=12}
 #  note partial weeks at start and end of year already met criteria so no 
@@ -727,6 +749,13 @@ days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3,
 twice$date <- twice$week_ending - days_from_sun[twice$day_of_week]
 
 y_25_daily_with_twice <- merge(y_25_daily, twice[, c("date", "twice_adjusted_hours")], by = "date")
+
+what_if_adjustments <- rbind(what_if_adjustments, 
+                             data.frame(
+                               type ="Two Writing Days",
+                               yearly_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm=TRUE)
+                            ))
+
 y_25_daily_with_twice$twice_adjust_change <- y_25_daily_with_twice$twice_adjusted_hours - y_25_daily_with_twice$total_orig_hours 
 
 
@@ -751,79 +780,12 @@ y_25_daily_with_twice %>%
   labs(title = "Two Writing Days",
        x = "",
        y = "") +
-  theme_minimal()
-
-twice_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm=TRUE)
-twice_weekly_average = twice_total / 365 * 7
-
-```
-
-```{r Twice Weekly alts, fig.height=3, fig.width=12}
-#  note partial weeks at start and end of year already met criteria so no 
-#  special casing was needed to prevent adding hours for a day in 2024 or 2026
-
-twice <- y_25_daily %>% 
-  mutate(
-    day_of_week = weekdays(date),
-    # Calculate days to add to reach Sunday - weekday 0
-    # If the current day is Sunday (0), add 0 days. If Saturday (6), add 1 day, etc.
-    week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7
-  ) %>%
-  pivot_wider(
-    id_cols = week_ending,
-    names_from = day_of_week, 
-    values_from = total_orig_hours)
-
-threshold <- 1.5
-
-twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
-                                      "Wednesday", "Thursday" , 
-                                      "Friday" , "Saturday" , "Sunday")],
-                            1, function(row) sum(row >= threshold, na.rm = TRUE))
-twice$adjust <- ifelse(twice$weekly_count < 3, TRUE, FALSE)
-
-#assign Wednesdays
-twice$Wednesday <- ifelse(twice$adjust & twice$Wednesday <= threshold, threshold, twice$Wednesday)
-
-#reassess remaining
-twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
-                                      "Wednesday", "Thursday" , 
-                                      "Friday" , "Saturday" , "Sunday")],
-                            1, function(row) sum(row >= threshold, na.rm = TRUE))
-twice$adjust <- ifelse(twice$weekly_count < 3, TRUE, FALSE)
-#assign Saturdays
-twice$Saturday <- ifelse(twice$adjust & twice$Saturday <= threshold, threshold, twice$Saturday)
-
-#reassess remaining
-twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
-                                      "Wednesday", "Thursday" , 
-                                      "Friday" , "Saturday" , "Sunday")],
-                            1, function(row) sum(row >= threshold, na.rm = TRUE))
-twice$adjust <- ifelse(twice$weekly_count < 3, TRUE, FALSE)
-
-#assign Sundays
-twice$Sunday <- ifelse(twice$adjust & twice$Sunday <= threshold, threshold, twice$Sunday)
-
-#pivot back to tall
-twice <- twice %>%
-  pivot_longer(
-    cols =  c("Monday", "Tuesday", 
-              "Wednesday", "Thursday" , 
-              "Friday" , "Saturday" , "Sunday"),
-    names_to = "day_of_week",
-    values_to = "twice_adjusted_hours"
+  theme_minimal() + 
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
   )
-
-days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3, 
-             "Friday"=2, "Saturday"=1, "Sunday"=0)
-twice$date <- twice$week_ending - days_from_sun[twice$day_of_week]
-
-y_25_daily_with_twice <- merge(y_25_daily, twice[, c("date", "twice_adjusted_hours")], by = "date")
-y_25_daily_with_twice$twice_adjust_change <- y_25_daily_with_twice$twice_adjusted_hours - y_25_daily_with_twice$total_orig_hours 
-
-twice_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm=TRUE)
-twice_weekly_average = twice_total / 365 * 7
-print(twice_total-288)
 
 ```
 
@@ -839,21 +801,34 @@ The resulting tables:
 
 ## The results
 
-![](images/Comparisons.png)
+```{r Calc weekly}
+
+what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
+
+```
+
+|   | Model | 2025 start | No Skips | Raised Minimum, No Skips | Two writing days | Vacation |
+|:-----------|-------|:-------|:----------|:----------|-----------|-------------|
+| **Yearly total** | 395.5 | 288.25 | +14.25 | +49.25 | +53.5 | +1 to 25 |
+| **Weekly mean** | 7.56 | 5.53 | +0.27 | +0.94 | +1.03 | +0.02 to 0.48 |
+
+Looking at the experiments side-by-side, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.49 weekly mean. So based on my approximations above, I could feasibly reach my model year goal, if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
 
 # The Plan:
 
-Based on all of the above, I decided to set my 2026 goals to be: Maintain a daily writing streak without skip days ? Write a minimum of 1 hour twice a week (No set days - but this will likely be one weekend day and Wednesdays--since I attend a weekly writing meet up that day) ?
+My past experience with goals and resolutions has been to start small and obtainable and increase from there. Instead of a yearly total goal, I am going to be focused on the weekly total. This way if life events disrupt my writing or an experiment fails to work out, I need only start anew the next week, and not be bogged down with the feeling that I need to "catch up" and work even harder to make up the difference.
 
-I chose not to set an overarching grand-total for the year goal because I have found those lag metrics less motivating. For example, if I set a goal of reading "100 books a year", then have a month where I fall behind, it can make the rest of the year feel like a demotivating scramble to catch up. But if my goal is to read "about 2 books a week", I can always start a new week and feel like I am getting back on track with a lead-metric habit.
-
-I anticipate life events in 2026 might interrupt my habits like they did in 2025, so I am focusing on the small controllable targets on a weekly and monthly cadence.
+I decided to round down my weekly model year goal to 7.5 hours and set this not as my currently weekly goal at the start of 2026, but as weekly total I want to reach by the end of the year. Given my 2025 mean was only 5.5, I will start my year aiming for 6 hours and hope to increase that gradually over the year by the remaining 1.5.
 
 ## Tracking Dashboard:
 
-I create a Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals.
+I created a Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals.
 
-As of the time of my writing this (1/\_\_/2026), my prior weeks have not been near my new goals. Unsurprising since I had not even established the goals yet--and had focused most of my free time on this analysis.
+TODO: Build the thing + add screenshots and such
+
+TODO: Not future analysis below for multiple sessions check
+
+As of the time of my writing this (1/\_\_/2026), my prior weeks have not been anywhere near my new goals. Unsurprising since I had not even established the goals yet and had been spending a majority of my time on this analysis and only maintaining my quarter an hour minimum on writing.
 
 Now that I have a centralized place to see how I am doing, I can make informed decisions to course correct and try new experiments if necessary.
 
@@ -861,7 +836,9 @@ Now that I have a centralized place to see how I am doing, I can make informed d
 
 ### Timing:
 
-One experiment + metric that I added is not yet backed by any concrete data set: writing multiple times per day. Prior this year, I only tracked my writing time down to the day. If I wrote 1 in the morning and 0.75 in the evening, I might enter the data in my timesheet as =1+.75, but there was no indication these were two different sessions or when they happened. I might be just as likely to enter that formula if I had done an hour morning writing session--usually tracked with a simple egg-timer--then decided to attempt a second hour right after it, which I ended early. I also was not particularly careful not to copy/paste-as-value over these summarized days when transferring entries between old and new timesheet templates. The formula was only used for ease of data entry.
+One experiment and metric that I added is not yet backed by any concrete data set: writing multiple times per day.
+
+Prior this year, I only tracked my writing time down to the day. If I wrote 1 in the morning and 0.75 in the evening, I might enter the data in my timesheet as =1+.75, but there was no indication these were two different sessions or when they happened. I might be just as likely to enter that formula if I had done an hour morning writing session--usually tracked with a simple egg-timer--then decided to attempt a second hour right after it, which I ended early. I also was not particularly careful not to copy/paste-as-value over these summarized days when transferring entries between old and new timesheet templates. The formula was only used for ease of data entry.
 
 Which means I cannot say if my productive writing days were made out of lots of little sessions or several long sessions. If mornings were more impactful, or evenings. For 2026, I hope to prime myself to answer those questions.
 
@@ -969,6 +946,8 @@ For the example above, my script would mark Saturday, Sunday, and Friday as week
 
 ### Cleaning
 
+TODO: Finish filling out Python section
+
 After I initially parsed the data, I created a quick calendar heatmap visualization to help me validate the output. It quickly revealed some potential issues in the data. For example, it looked like I had taken three weeks of vacation in April 2024! And I saw other blank weeks that did not appear to line up with any vacations I remembered taking.
 
 ![](images/work_schedule_heatmap.svg)
@@ -983,47 +962,48 @@ If I had found that there was outlier data in that week or I had more missing we
 
 ### Additional Validation
 
-## Off day subcategories {#off-day-subcategories}
+Returning to my visualization I decided to spot check a few other oddities, such as:
 
-<placeholder> In my initial parsing of the data I had even more finite categories, but when reviewing the data that level of granularity did not add additional insights...
+-   4.5 hours on a Sunday \_\_\_\_ - this was correct. I was even able to find the text message chain with my project PM as she was coordinating scheduling team members to work on that project over the weekend ahead of an important client demo.
 
-```{r paid leave histograms, fig.height=3, fig.width=12}
+-   Shifts in my usual Mon-Thu schedule on \_\_ and \_\_ - was to accommodate holidays
 
-# Note look into the distributions different when I expand outside of 2024, but my skip day skew in 2023 might be a factor
-merged <- left_join(model_year, schedule, by ="date")
-merged <- merged %>% 
-  mutate(schedule_type = case_when(
-    schedule_category == "holiday" ~ "paid leave",
-    schedule_category == "sickday" ~ "paid leave",
-    schedule_category == "vacation" ~ "paid leave",
-    schedule_category == "weekend" ~ "weekend",
-    schedule_category == "workday" ~ "workday",
-  )
-)
+-   Extra long work days \_\_ and \_\_  - was due to evening company events like an extreme interviews or quarterly all hand's meetings
 
-ggplot(merged, aes(x = Hours, fill=schedule_category)) +
-  geom_histogram(
-    binwidth = 0.25,
-    boundary = 0,
-    closed = "left",
-    color = "#FFFFFF",
-    show.legend = FALSE,
-    aes(y = after_stat(density))
-    ) +
-  theme_minimal() +
-  labs(
-    title = "2024",
-    x = "Hours written",
-    y = "Density"
-  ) +
-  facet_wrap(~ schedule_category)
+I also wanted to double check all holidays were parsed correctly. For 2023 and 2024 there should have been 10. I found 9 and 11. 
 
-```
+After matching up the dates flagged for 2023 against my holidays list and accounting for effective dates (new years fell on a weekend), I found that my missing holiday was my float holiday. Presumably it had been applied to one of my PTO days that year.
 
-<picture> Sick days, vacation days, and holidays were useful to identify outliers, but the distribution of each did not vary from one another as much as I had originally hypothesized. The reason for this, I believe, are two fold. For vacation days, I do not focus all my vacation days on creative writing--I might just as like be traveling or doing other activities that take up more time and result in a lower writing output. For sick days, I can think of a few occasions that might account for high output days. A typical one would be that I called out sick from work due to a migraine and spent most of the morning in bed, but if I was feeling recovered enough by early or late afternoon, I probably would spend that time writing.
+For 2024, I remembered the issue--I had mistakenly believed I still had a float holiday left to use up end of year, but I did not. I corrected the timesheet to use PTO instead. 
 
-\<add note about the 4 hour workday 1/3 and checking that it was in fact both a workday + a high productivity day
+### Manual-Categorizing:
+
+For my use case, it was likely to be useful to break down PTO and Partial PTO days with more granularity to know if these were days I was more or less likely to have extra writing time--for example home sick with a migraine or intentionally out for the day as a mini vacation.
+
+These were not going to be retrievable from the timesheet data, but were possible to reverse engineer when working with the smaller data set of of specific \_\_\_\_ PTO and Partial PTO dates, rather than trying to come up with all my sick days for the last 3 years.
+
+--PTO was tracked and used down to a quarter of an hour, and as an hourly employee, I was required to use PTO to bridge the gap if my schedule hours were short at the end of the week. For example, since I had a 4 day 32 hours per week schedule, if at the end of the week, I had logged only 31.5 hours, I would need to use up .5 hours of PTO. For the context of this creative writing metric analysis, that .5 hours of PTO is unlikely to have any significant impact on my writing output. 
+
+These answers or assumptions were all included in the python code, again, so that I could easily adjust and recreate the dataset and have a tracked place to know what categorizations high confidence vs guesses--and why I made that guess.
+
+This data then was joined into the script  so that I only needed to run the script once to get back the full dataset, rather than running multiple scripts against the data.
+
+### **Results:**
+
+------------------------------------------------------------------------
 
 ## What do you write? Are you published?
 
 I write primarily fiction, usually in the adult fantasy or Sci Fi genres. I'm not published yet, but ultimately finding an agent and a traditional publisher for my books is my goal!
+
+------------------------------------------------------------------------
+
+## How long does it take you to write a novel?
+
+That is the very question that started me tracking my time in the first place. At present, I do not have hourly data for a manuscript from beginning to end. For my most-finished work, the Sorceress project, I only have the home stretch of the 2nd draft tracked, followed by the 3rd, 4th, and 5th drafts.
+
+Based on the data I do have, I can say that I write rough drafts pretty quickly. Raven took me 50.25 hours and Katarin took me 31.5.
+
+2nd drafts take me much longer. Raven is at 509 and counting.
+
+Trying to approximate a total based on the data I do have available is something I hope to explore in a future analysis.
