@@ -16,6 +16,11 @@ library(kableExtra)
 
 timesheet <- read.csv("data/core_writing_data.csv")
 timesheet$date <- as.Date(timesheet$Day, format = "%m/%d/%Y")
+# combine entries for the date and category/project.
+timesheet <- timesheet %>%
+  group_by(date, Day, Time, Category, Project, Sub.Project) %>%
+  summarise(Hours = sum(Hours)) %>%
+  ungroup()
 #todo - possible data cleaning, collapse+combine totals for same day/cat/etc rows - know of only one repeat, but with times added in the future there will be more
 
 #update new column assignment operators to consistently be <-
@@ -808,7 +813,7 @@ what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
 ```
 
 |   | Model | 2025 start | No Skips | Raised Minimum, No Skips | Two writing days | Vacation |
-|:-----------|-------|:-------|:----------|:----------|-----------|-------------|
+|:----------|-----------|:----------|:----------|:----------|-----------|-----------|
 | **Yearly total** | 395.5 | 288.25 | +14.25 | +49.25 | +53.5 | +1 to 25 |
 | **Weekly mean** | 7.56 | 5.53 | +0.27 | +0.94 | +1.03 | +0.02 to 0.48 |
 
@@ -822,7 +827,7 @@ I decided to round down my weekly model year goal to 7.5 hours and set this not 
 
 ## Tracking Dashboard:
 
-I created a Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals.
+I created an interactive Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals: <https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking>
 
 TODO: Build the thing + add screenshots and such
 
@@ -831,6 +836,8 @@ TODO: Not future analysis below for multiple sessions check
 As of the time of my writing this (1/\_\_/2026), my prior weeks have not been anywhere near my new goals. Unsurprising since I had not even established the goals yet and had been spending a majority of my time on this analysis and only maintaining my quarter an hour minimum on writing.
 
 Now that I have a centralized place to see how I am doing, I can make informed decisions to course correct and try new experiments if necessary.
+
+While I had hoped to make this a live dashboard of my numbers, unfortunately the public version of Tableau does not support a live data link to my Google sheet, so this dashboard will need manual reuploads of my data to stay in sync.
 
 ## Further Analysis:
 
@@ -930,7 +937,7 @@ To better understand my writing habits, I wanted to add additional context about
 
 ### Data Source
 
-For my work schedule from April 2025 forward, I could easily source this information from my employer's PTO application. I also usually include a memo line on the request distinguishing between sick days and vacation time. For those few entries missing that data, they were recent enough that I knew what category to put them in. Holidays I could pull from an informational email listing the effective holidays for the year.
+For my work schedule from April 2025 forward, I could easily source this information from my employer's PTO application. I also usually include a memo line on the request distinguishing between sick days, vacation time, or appointments. For those few entries missing that data, they were recent enough that I knew what category to put them in. Holidays I could pull from an informational email listing the effective holidays for the year.
 
 For data prior April 2025, I would have to get more creative. Outs were submitted through email from an account I no longer have access to, but I do have a nearly complete copy of all my Menlo timesheets from the 2023-2025 period of interest. These timesheets do not specify which days were sick days versus planned vacation outs, but they would allow me to assemble a list days I took PTO and effective holidays.
 
@@ -940,15 +947,13 @@ My Menlo timesheets are structure for human readability, not an automated import
 
 ![](images/annotated_menlo_timesheet.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
-Given the complexity of file format and the number of files (118 in total), I chose to write a python script to extract the information I needed into an easier csv format. My script needed to dynamically handle the varying number of rows and a changing layout. (During development, I found some variation in which cells were merged on the template over time). My entire python script can be found [here](https://github.com/snball6/creative-writing-metrics/blob/main/python-timesheet-parsing/timesheet_parser.py), but the parsing specifically occurs in the `parse_timesheets` function.
+Given the complexity of file format and the number of files (118 in total), I chose to write a python script to extract the information I needed into an easier csv format. My script needed to dynamically handle the varying number of rows and a changing layout. (During development, I found some variation in the template over time). My entire python script can be found [here](https://github.com/snball6/creative-writing-metrics/blob/main/python-timesheet-parsing/timesheet_parser.py), but the parsing specifically occurs in the `parse_timesheets` function.
 
-For the example above, my script would mark Saturday, Sunday, and Friday as weekends. Monday and Tuesday and workdays. Wednesday as PTO, and Thursday as a Holiday.
+For the example above, my script would mark Saturday, Sunday, and Friday as weekends, Monday and Tuesday as workdays, Wednesday as PTO, and Thursday as a Holiday.
 
 ### Cleaning
 
-TODO: Finish filling out Python section
-
-After I initially parsed the data, I created a quick calendar heatmap visualization to help me validate the output. It quickly revealed some potential issues in the data. For example, it looked like I had taken three weeks of vacation in April 2024! And I saw other blank weeks that did not appear to line up with any vacations I remembered taking.
+After I initially parsed the data, I created a calendar heatmap visualization with a python library to help me validate the output. It quickly revealed some potential issues in the data. For example, it looked like I had taken three full weeks of vacation in April 2024! And I saw blank weeks in other years that did not line up with any vacations I remembered taking.
 
 ![](images/work_schedule_heatmap.svg)
 
@@ -956,39 +961,21 @@ I added an additional check to my script to not only list any files that failed 
 
 Because I wanted to be able to reproduce my work, I kept a running list of all my changes to files–checked into the same repo as my parsing script and this report. I was also working on a duplicate copy of my timesheet files, so I would always have the originals available for reference or to revert my changes.
 
-One file I knew was missing before I even started my analysis. I decided to make a placeholder best-guess timesheet to bridge that gap. Because my goal for using this data was to identify non-work days that might explain outlier writing hours, and I had already verified there were no unusually high or low writing hours that week, I decided it was sufficient to assume a regular work week schedule. 
+There was one file I knew was missing before I even started my analysis. I decided to make a placeholder best-guess timesheet to bridge that gap. Because my goal for using this data was to identify non-work days that might explain outlier hours and I had already verified there were no unusually high or low writing hours that week, I decided it was sufficient to assume a regular work week schedule. 
 
 If I had found that there was outlier data in that week or I had more missing weeks in the data set, I would have introduced an "unknown" category to help distinguish these days.
 
-### Additional Validation
-
-Returning to my visualization I decided to spot check a few other oddities, such as:
-
--   4.5 hours on a Sunday \_\_\_\_ - this was correct. I was even able to find the text message chain with my project PM as she was coordinating scheduling team members to work on that project over the weekend ahead of an important client demo.
-
--   Shifts in my usual Mon-Thu schedule on \_\_ and \_\_ - was to accommodate holidays
-
--   Extra long work days \_\_ and \_\_  - was due to evening company events like an extreme interviews or quarterly all hand's meetings
-
-I also wanted to double check all holidays were parsed correctly. For 2023 and 2024 there should have been 10. I found 9 and 11. 
-
-After matching up the dates flagged for 2023 against my holidays list and accounting for effective dates (new years fell on a weekend), I found that my missing holiday was my float holiday. Presumably it had been applied to one of my PTO days that year.
-
-For 2024, I remembered the issue--I had mistakenly believed I still had a float holiday left to use up end of year, but I did not. I corrected the timesheet to use PTO instead. 
-
 ### Manual-Categorizing:
 
-For my use case, it was likely to be useful to break down PTO and Partial PTO days with more granularity to know if these were days I was more or less likely to have extra writing time--for example home sick with a migraine or intentionally out for the day as a mini vacation.
+Once the script was able to produce a subset of dates that were either pto or partial workdays, I began working through them one at a time to see if I could categorize them further. By checking my calendar and my journals, I was able to add the additional levels of granularity of a sick day or vacation. I also found a few that would better be called weekends, they just did not fall during my usual Friday to Sunday on that particular week.
 
-These were not going to be retrievable from the timesheet data, but were possible to reverse engineer when working with the smaller data set of of specific \_\_\_\_ PTO and Partial PTO dates, rather than trying to come up with all my sick days for the last 3 years.
+I built out an override file listing the date, category, and source/reason for my grouping for my own reference and then added into the script a step to use these overrides to add additional categorization.
 
---PTO was tracked and used down to a quarter of an hour, and as an hourly employee, I was required to use PTO to bridge the gap if my schedule hours were short at the end of the week. For example, since I had a 4 day 32 hours per week schedule, if at the end of the week, I had logged only 31.5 hours, I would need to use up .5 hours of PTO. For the context of this creative writing metric analysis, that .5 hours of PTO is unlikely to have any significant impact on my writing output. 
+Ultimately, it turned out the granularity was not needed. It turned out that both sick days and vacation days had their outlier high writing as well as very low writing.
 
-These answers or assumptions were all included in the python code, again, so that I could easily adjust and recreate the dataset and have a tracked place to know what categorizations high confidence vs guesses--and why I made that guess.
+The low productivity vacation days are easily by the fact that not all vacation days are spent focused on writing. I do have other hobbies, interests, and commitments. The high output sick days would not be too unusual either in the cases where I stayed home sick due to a migraine. In such cases, I might sleep late, avoiding bright lights and loud noises, and start feeling better by late afternoon. At which point, restless to be doing something, I could easily fit in a hour or three of writing.
 
-This data then was joined into the script  so that I only needed to run the script once to get back the full dataset, rather than running multiple scripts against the data.
-
-### **Results:**
+TODO: Graph about it?
 
 ------------------------------------------------------------------------
 
