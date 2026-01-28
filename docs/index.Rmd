@@ -21,9 +21,9 @@ timesheet <- timesheet %>%
   group_by(date, Day, Time, Category, Project, Sub.Project) %>%
   summarise(Hours = sum(Hours)) %>%
   ungroup()
-#todo - possible data cleaning, collapse+combine totals for same day/cat/etc rows - know of only one repeat, but with times added in the future there will be more
 
-#update new column assignment operators to consistently be <-
+#todo update new column assignment operators to consistently be <-
+#todo R code indentation formatting
 
 #this file is intentionally not included in the repo for privacy reasons
 schedule <- read.csv("data/combined_workday_schedule.csv") 
@@ -34,9 +34,9 @@ timesheet_complete <- timesheet %>%
   filter(!is.na(date)) %>%
   complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Time = "N/A", Category = "N/A", Project = "N/A", Sub.Project = ""))
 
-reduct_c = "#b6ddf6"
-base_color = "#7AA6C2"
-highlight_c = "#004c6d"
+reduct_c = "#9ef0f0"
+base_color = "#08bdba"
+highlight_c = "#007d79"
 
 ```
 
@@ -82,7 +82,33 @@ Prior to this analysis project, my primary way of visualizing this information a
 
 # The Goal {#the-goal}
 
-TODO: all time monthly chart
+```{r base timeline, fig.height=4, fig.width=12}
+timeline <- read.csv("data/timeline_annotated.csv")
+timeline$date <- as.Date(timeline$Day, format = "%m/%d/%Y")
+timeline_complete <- timeline %>%
+  filter(!is.na(date)) %>%
+  complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Category = "N/A", Project = "N/A", Sub.Project = "", Timeline.category = ""))
+
+  timeline_complete %>%
+  # aggregate by month
+  mutate(year_month = floor_date(date, "month")) %>%
+  group_by(year_month) %>%
+  summarise(total_hours = sum(Hours), .groups = "drop") %>%
+  # plot
+  ggplot(aes(x = year_month, y = total_hours)) +
+  geom_col(color = "#ffffff", fill=base_color, show.legend = FALSE) +
+  labs(title = "Monthly Total Hours",
+       x = "",
+       y = "") +
+  theme_minimal() +
+  scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b %Y",  
+    expand = expansion(mult = c(0, 0))
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal.
 
@@ -100,13 +126,16 @@ y_24_25_date_grouped$year_s <- format(y_24_25_date_grouped$date, "%Y")
 y_24_25_date_grouped$highlight <- ifelse(
                   # mark 2024 mode and median
                   (year(y_24_25_date_grouped$date) == 2024 &
-                     (y_24_25_date_grouped$sum_hours == 0.5 |   
-                        y_24_25_date_grouped$sum_hours == 1.25)) |
+                     y_24_25_date_grouped$sum_hours == 0.5) |
                   # mark 2025 mode and median
                     (year(y_24_25_date_grouped$date) == 2025 &
-                     (y_24_25_date_grouped$sum_hours == 0.25 |   
-                        y_24_25_date_grouped$sum_hours == 0.5)),
+                     y_24_25_date_grouped$sum_hours == 0.25),
                               "Highlighted", "Normal")
+
+median_df <- y_24_25_date_grouped %>%
+  group_by(year_s) %>%
+  summarise(med_val = median(sum_hours))
+median_df$highlight <- "Normal"
 
 facet_labeller <- as_labeller(c(
   "2024" = "2024 - Mode: 0.50 and Median 1.25",
@@ -121,12 +150,17 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
     color = "#FFFFFF",
     show.legend = FALSE
     ) +
+  geom_vline(data = median_df, aes(xintercept = med_val),
+             color = "black", linetype = "dashed", size = 0.5) +
   facet_wrap(~ year_s, labeller = facet_labeller) +
   coord_cartesian(xlim = c(0, 8)) +
+  scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   scale_fill_manual(values = c("Highlighted" = highlight_c, "Normal" = base_color)) +
   theme_minimal() +
   theme(
-    plot.title = element_text(size = 15)
+    plot.title = element_text(size = 15),
+    panel.spacing = unit(2, "lines")
     ) + 
   labs(
     title = "Distribution of writing session length",
@@ -143,11 +177,6 @@ To better inform why 2025 fell short of that goal, let me unpack and contextuali
 ![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
 
 ```{r annotated timeline, fig.height=4, fig.width=12}
-timeline <- read.csv("data/timeline_annotated.csv")
-timeline$date <- as.Date(timeline$Day, format = "%m/%d/%Y")
-timeline_complete <- timeline %>%
-  filter(!is.na(date)) %>%
-  complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Category = "N/A", Project = "N/A", Sub.Project = "", Timeline.category = ""))
 
 custom_colors <- c("9 none" = "#B0B0B0",
 "5 Sorceress 2nd" = "#444e86",
@@ -255,7 +284,7 @@ cat_hist %>%
     boundary = 0,
     closed = "left",
     color = "#FFFFFF",
-    fill="#7AA6C2",
+    fill = base_color,
     show.legend = FALSE,
     position = 'identity',
     aes(y = after_stat(density * width)) #probability percent
@@ -284,7 +313,7 @@ cat_hist %>%
     boundary = 0,
     closed = "left",
     color = "#FFFFFF",
-    fill="#7AA6C2",
+    fill = base_color,
     show.legend = FALSE,
     position = 'identity',
     ) +
@@ -608,7 +637,9 @@ what_if_adjustments <- data.frame(type = c("Starting point"),
 
 TODO: legend labels for all
 
-##1) No Skip Days What if I had maintained my writing streak and written my minimum of 0.25 everyday. In 2025, I skipped writing 57 days - the bulk of them during the pause periods noted previously.
+## 1) No Skip Days 
+
+What if I had maintained my writing streak and written my minimum of 0.25 everyday. In 2025, I skipped writing 57 days - the bulk of them during the pause periods noted previously.
 
 ```{r Skip Days, fig.height=3, fig.width=12}
 
@@ -640,7 +671,7 @@ y_25_daily %>%
            ) +
   scale_fill_manual(
     values = c("skip_adjust_change" = highlight_c, "skip_adjust_hours" = base_color),
-    labels = c("Change", "Adjusted Hours")
+    labels = c("Increase", "2025 Basline")
     ) +
   labs(title = "No Skip Days",
        x = "",
@@ -654,14 +685,16 @@ y_25_daily %>%
 
 ```
 
-##2) Raised Minimum What if I had maintained my daily writing streak and also raised my minimum to at least 0.5 hours every day?
+## 2) Raised Minimum 
+
+What if I had maintained my daily writing streak and also raised my minimum to at least 0.5 hours every day?
 
 ```{r Half Hour Min, fig.height=3, fig.width=12}
 
 y_25_daily$min_adjust_hours = ifelse(y_25_daily$total_orig_hours < 0.5, 
                                              0.5, y_25_daily$total_orig_hours)
 
-what_if_adjustments <- rbind(what_if_adjustments, 
+what_if_adjustments <- rbind(what_if_adjustments,
                              data.frame(
                                type ="Raised Minimum",
                                yearly_total = sum(y_25_daily$min_adjust_hours, na.rm=TRUE)
@@ -685,7 +718,7 @@ y_25_daily %>%
            ) +
   scale_fill_manual(
     values = c("min_adjust_change" = highlight_c, "min_adjust_hours" = base_color),
-    labels = c("Change", "Adjusted Hours")
+    labels = c("Increase", "2025 Basline")
     ) +
   labs(title = "Half Hour Minimum",
        x = "",
@@ -699,7 +732,9 @@ y_25_daily %>%
 
 ```
 
-##3) Two Writing Days What if I wrote at least 1.5 hours on at least two days a week?
+## 3) Two Writing Days 
+
+What if I wrote at least 1.5 hours on at least two days a week?
 
 Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either Wednesday, Saturday, or both days to meet the 2 day requirement.
 
@@ -780,7 +815,7 @@ y_25_daily_with_twice %>%
            ) +
   scale_fill_manual(
     values = c("twice_adjust_change" = highlight_c, "twice_adjusted_hours" = base_color),
-    labels = c("Change", "Adjusted Hours")
+  labels = c("Increase", "2025 Basline")
     ) +
   labs(title = "Two Writing Days",
        x = "",
@@ -794,7 +829,9 @@ y_25_daily_with_twice %>%
 
 ```
 
-4)  Writing Vacations What if I took time off from work with the express purpose of spending a large portion of that day writing?
+## 4) Writing Vacations 
+
+What if I took time off from work with the express purpose of spending a large portion of that day writing?
 
 For this one, I did not create a chart, but rather tables to assessed the potential impact.
 
@@ -821,13 +858,41 @@ Looking at the experiments side-by-side, the twice weekly option has the highest
 
 # The Plan:
 
-My past experience with goals and resolutions has been to start small and obtainable and increase from there. Instead of a yearly total goal, I am going to be focused on the weekly total. This way if life events disrupt my writing or an experiment fails to work out, I need only start anew the next week, and not be bogged down with the feeling that I need to "catch up" and work even harder to make up the difference.
+[flip order, too much preamble?]
 
-I decided to round down my weekly model year goal to 7.5 hours and set this not as my currently weekly goal at the start of 2026, but as weekly total I want to reach by the end of the year. Given my 2025 mean was only 5.5, I will start my year aiming for 6 hours and hope to increase that gradually over the year by the remaining 1.5.
+My past experience with goals and resolutions has been to start small and obtainable and increase from there. Instead of a yearly total goal, I am going to be focused on the weekly total. This way if life events disrupt my writing or an experiment is not producing results, I only need to start new the next week, and not be bogged down with the feeling that I need to “catch up” and work even harder to make up the difference. 
+
+I decided to round down my weekly model year goal to an even 7.5 hours and set this not as my current weekly goal at the start of 2026, but as the weekly total I want to reach by the end of the year. My 2025 weekly mean was only 5.5 hours a week, so I will start my year aiming for 6 hours and hope to increase that gradually over the year by the remaining 1.5.
+
+Combined with the information in my what ifs my start of year goals are:
+
+1) Write 6 hours total each week
+
+2) Write 1.5 hours or more two days a week
+
+3) Write a minimum of 0.5 every day
 
 ## Tracking Dashboard:
 
-I created an interactive Tableau Dashboard to give me a clear set of visuals to benchmark my progress on my goals: <https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking>
+To track my progress towards these goals, I created an interactive [Tableau dashboard](https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking) categorizing my weekly writing time per day and also providing a weekly total on the right.
+
+On the left, the colors are set to allow me to at a glance see if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. If I have had days that fell short of my 0.5 minimum, they would appear as yellow. Or if I broke my writing streak entirely and missed writing for a day, it would be red. 
+
+\<screenshot\>
+
+As you can see, I have not hit my goals in this first month of the year, but I do not find this surprising, since I had not yet set those goals. A lot of my time had been focused on this analysis, and I had only been writing my old 0.25 minimum. 
+
+\<ADD WRITING STREAK #?\>
+
+I also created a dashboard showing my hourly writing data in a heat map calendar format to help me better track if there are certain higher or lower output days I want to focus on.
+
+In both dashboards, my entire data set going back to 2023 is available to compare against.
+
+\<screenshot\>
+
+Because the public version of Tableau does not allow for live data source linking, the Tableau dashboard will only be updated periodically when I manually reupload and publish my metrics. For an automated live version, I created a simpler graphic to the first dashboard in a tab in google sheets \<link\> using pivot tables and charts.
+
+\<screenshot\>
 
 TODO: Build the thing + add screenshots and such
 
@@ -839,17 +904,13 @@ Now that I have a centralized place to see how I am doing, I can make informed d
 
 While I had hoped to make this a live dashboard of my numbers, unfortunately the public version of Tableau does not support a live data link to my Google sheet, so this dashboard will need manual reuploads of my data to stay in sync.
 
-## Further Analysis:
+SOME KIND OF WRAP UP:
 
-### Timing:
+Ideally the success on the left will drive increases on the right, though it is not a guarantee. With 1.5 twice a week and 0.5 the other days, I only reach 5.5 hours. Likewise, I could write a lot on one day of the week and skip or fall below 0.5 the others and be falling short on the left measure.
 
-One experiment and metric that I added is not yet backed by any concrete data set: writing multiple times per day.
+As the year plays out, I hope to adjust and revise my strategy based on what seems to be working. For example, I plan to add another off-site writing day similar to my writing meet up to my week, but it may turn out that I am better able to consistently keep up that second writing day if I do so from home.
 
-Prior this year, I only tracked my writing time down to the day. If I wrote 1 in the morning and 0.75 in the evening, I might enter the data in my timesheet as =1+.75, but there was no indication these were two different sessions or when they happened. I might be just as likely to enter that formula if I had done an hour morning writing session--usually tracked with a simple egg-timer--then decided to attempt a second hour right after it, which I ended early. I also was not particularly careful not to copy/paste-as-value over these summarized days when transferring entries between old and new timesheet templates. The formula was only used for ease of data entry.
-
-Which means I cannot say if my productive writing days were made out of lots of little sessions or several long sessions. If mornings were more impactful, or evenings. For 2026, I hope to prime myself to answer those questions.
-
-I also now have a dedicated spreadsheet tracking my work schedule so I can keep using that data to inform my dashboard, rather than needing to periodically export and categorize the data from the current payroll application.
+## 
 
 # Appendix
 
@@ -897,6 +958,8 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 ## ![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
+------------------------------------------------------------------------
+
 ## Active Writing Time {#active-writing-time}
 
 I only count time when I am intentionally sitting down to write, rewrite, or brainstorm on a project.
@@ -906,6 +969,8 @@ I do not track time spent thinking about my writing while doing other things. Fo
 However, I do not want to discount those non-active writing activities. Many of my break through decisions on a plot problem or characterization happen outside of active-writing time. As my data set grows I hope to revisit the question of the importance of non-active writing time and necessary breaks between writing session.
 
 I would hypothesize there is an ideal ratio or at least an upper bounds of how many active hours I can put in before stepping away is necessary to make forward progress. For example, my Raven 1st draft took a total of 50 hours to complete, but that time was spread out over the course of 80 days. I do not think I would have been able to condense all that work into 2 work weeks, even if I had a clear schedule to focus only on writing for that period.
+
+------------------------------------------------------------------------
 
 ## Why 15 minutes? {#why-15-minutes}
 
@@ -976,6 +1041,14 @@ Ultimately, it turned out the granularity was not needed. It turned out that bot
 The low productivity vacation days are easily by the fact that not all vacation days are spent focused on writing. I do have other hobbies, interests, and commitments. The high output sick days would not be too unusual either in the cases where I stayed home sick due to a migraine. In such cases, I might sleep late, avoiding bright lights and loud noises, and start feeling better by late afternoon. At which point, restless to be doing something, I could easily fit in a hour or three of writing.
 
 TODO: Graph about it?
+
+------------------------------------------------------------------------
+
+## Further Analysis
+
+Prior this year, I did not create separate entries for separate writing sessions that were for the same project on the same day. I might, for convenience, enter the information into my spreadsheet as =1+1, but the same formula might also refer to one 2 hour long writing session where I set a kitchen timer, wrote for an hour, and then decided to keep going.
+
+Because this information was not differentiated, I do not know if multiple short sessions or a few long ones are more common or successful. I also do not know if certain times of day are a better fit. To that end, I added an additional Time field to my tracking sheet that is populated with the start time of my writing session, rounded to the quarter hour. I hope to revisit this data further into the year.
 
 ------------------------------------------------------------------------
 
