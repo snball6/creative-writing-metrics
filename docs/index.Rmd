@@ -41,7 +41,7 @@ highlight_c = "#007d79"
 ```
 
 \<Placeholder for opening graphic - possible weekly hours bar chart?\>
-
+TODO: decide on centering median lines in buckets or not
 # Summary
 
 With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by my software development work at Menlo Innovations.
@@ -114,8 +114,6 @@ My goal for this project was to identify ways to increase my writing productivit
 
 Last year, going into 2025, I had set myself the goal of writing at least an hour most days, that is a mode of 1 hour or higher. I thought it was a safe increase to push myself towards given my success in 2024. Surely, my productivity could just keep going up? But in execution, 2025 fell far short of that goal.
 
-TODO: mark mode and median differently
-
 ```{r 2024 histogram, fig.height=4, fig.width=12}
 y_24_25_date_grouped <- timesheet_complete %>%
   filter(year(date) == 2024 | year(date) == 2025) %>%
@@ -151,7 +149,7 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
     show.legend = FALSE
     ) +
   geom_vline(data = median_df, aes(xintercept = med_val),
-             color = "black", linetype = "dashed", size = 0.5) +
+             color = "black", linetype = "dashed", linewidth = 0.5) +
   facet_wrap(~ year_s, labeller = facet_labeller) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
@@ -207,20 +205,20 @@ custom_colors <- c("9 none" = "#B0B0B0",
     date_labels = "%b %Y",  
     expand = expansion(mult = c(0, 0))
   ) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 
 ```
 
 **2023:**
 
--   [Jan 2023 - Sorceress 2nd]{style="background-color:#444e86; color:#FFFFFF; padding:5px; border-radius: 10px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents seeking representation.
+-   [Jan - Sorceress 2nd]{style="background-color:#444e86; color:#FFFFFF; padding:5px; border-radius: 10px"} - I finished the 2nd draft of my Sorceress project and sent out queries to literary agents seeking representation.
 
--   [1st Jul 2023 - draft attempt]{style="background-color:#5886a5; color:#FFFFFF; padding:5px; border-radius: 10px"} - I started writing a brand new story, but lost steam part way in.
+-   [Jul - 1st draft attempt]{style="background-color:#5886a5; color:#FFFFFF; padding:5px; border-radius: 10px"} - I started writing a brand new story, but lost steam part way in.
 
--   [Sep 2023 - Raven 1st]{style="background-color:#955196; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and used the challenge of 50k words in 30 days to tackle a project I had attempted several times before, but had never finished a full draft. In the months before, I wrote a new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
+-   [Sep - Raven 1st]{style="background-color:#955196; color:#FFFFFF; padding:5px; border-radius: 10px"} - I decided to participate for the first time in [National Novel Writing Month](https://en.wikipedia.org/wiki/National_Novel_Writing_Month) and used the challenge of 50k words in 30 days to tackle a project I had attempted several times before, but had never finished a full draft. In the months before, I wrote a new outline and the opening chapters. In November, I accomplished the 50k goal, and kept going until the manuscript was finished December 9th for a total of 85k words in 80 days!
 
--   [Dec 2023 - Sorceress 3rd]{style="background-color:#ff6e54; color:#FFFFFF; padding:5px; border-radius: 10px"} - Fresh off that success, I decided to do another rewrite on my Sorceress manuscript and attempt another round of querying.
+-   [Dec - Sorceress 3rd]{style="background-color:#ff6e54; color:#FFFFFF; padding:5px; border-radius: 10px"} - Fresh off that success, I decided to do another rewrite on my Sorceress manuscript and attempt another round of querying.
 
 **2024:**
 
@@ -270,6 +268,11 @@ third_plus_median = median(cat_hist$Hours[cat_hist$Category == "3rd+ Draft"], na
 query_median = median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
 free_write_median = median(cat_hist$Hours[cat_hist$Category == "Free Write"], na.rm = TRUE)
 
+median_df <- cat_hist %>%
+  filter(Category %in% c("2nd Draft", "3rd+ Draft")) %>%
+  group_by(Category) %>%
+  summarise(med_val = median(Hours)+(0.25/2)) # visually center in bucket
+
 facet_labeller <- as_labeller(c(
   "1st Draft" = sprintf("1st Draft - Median %.2f", first_median),
   "2nd Draft" = sprintf("2nd Draft - Median %.2f", second_median),
@@ -289,12 +292,21 @@ cat_hist %>%
     position = 'identity',
     aes(y = after_stat(density * width)) #probability percent
     ) +
+  coord_cartesian(xlim = c(0, 8)) +
+  scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
+  scale_y_continuous(expand = expansion(add = 0)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 15),
+    panel.spacing = unit(2, "lines")
+    ) + 
   labs(
     title = "Normalized distribution of writing session length - 2023 through 2025",
     x = "Hours written",
     y = "Percentage of total"
   ) +
-  theme_minimal() +
+    geom_vline(data = median_df, aes(xintercept = med_val),
+             color = "black", linetype = "dashed", linewidth = 0.5) +
   facet_wrap(~ Category, labeller = facet_labeller)
 ```
 
@@ -302,7 +314,8 @@ Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all m
 
 I also identified three outlier writing sessions in the query category.
 
-```{r query 2024, fig.height=3, fig.width=12}
+TODO: size to match scale of faceted plots above
+```{r query 2024, fig.height=3, fig.align='center', out.width = "50%"}
 
 
 cat_hist %>%
@@ -316,13 +329,16 @@ cat_hist %>%
     fill = base_color,
     show.legend = FALSE,
     position = 'identity',
-    ) +
+    ) + 
+  coord_cartesian(xlim = c(0, 8)) +
+  scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
+  scale_y_continuous(expand = expansion(add = 0)) +
+  theme_minimal() +
   labs(
     title = "Distribution of querying writing session length - 2024",
     x = "Hours written",
     y = "Count of Days"
-  ) +
-  theme_minimal()
+  ) 
 ```
 
 While I usually spend between a quarter and a half hour on querying every few weeks maintaining a list of potential agents for the projects I am working on, it would be unusual for me to spend any longer sessions on the task in 2026 unless I was working on querying material for a specific project. Since I do not plan to have a manuscript reaching that level of completion in 2026, I also replaced these writing sessions with my 2nd draft median.
@@ -382,11 +398,13 @@ model_year %>%
        x = "",
        y = "") +
   theme_minimal() +
+  theme(legend.title = element_blank()) +
   scale_x_date(
     date_breaks = "1 month",
     date_labels = "%b %Y",  
     expand = expansion(mult = c(0, 0))
-  )
+  ) +
+  scale_y_continuous(expand = expansion(add = 0))
 
 ```
 
@@ -422,7 +440,8 @@ model_year_daily %>%
     date_breaks = "1 month",
     date_labels = "%b %Y",  
     expand = expansion(mult = c(0, 0))
-  )
+  ) +
+  scale_y_continuous(expand = expansion(add = 0))
 
 ```
 
@@ -450,6 +469,9 @@ pto_median = median(merged$total_original_hours[merged$schedule_type == "paid le
 weekend_median = median(merged$total_original_hours[merged$schedule_type == "workday"], na.rm = TRUE)
 weekday_median = median(merged$total_original_hours[merged$schedule_type == "weekend"], na.rm = TRUE)
 
+median_df <- merged %>%
+  group_by(schedule_type) %>%
+  summarise(med_val = median(total_original_hours))
 
 facet_labeller <- as_labeller(c(
   "paid leave" = sprintf("Paid Leave - Median %.2f", pto_median),
@@ -469,13 +491,22 @@ merged %>%
     position = 'identity',
     aes(y = after_stat(density * width)) #probability percent
     ) +
+  geom_vline(data = median_df, aes(xintercept = med_val),
+             color = "black", linetype = "dashed", linewidth = 0.5) +
+  coord_cartesian(xlim = c(0, 8)) +
+  scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
+  scale_y_continuous(expand = expansion(add = 0)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 15),
+    panel.spacing = unit(2, "lines")
+    ) + 
   facet_wrap(~ schedule_type, labeller = facet_labeller) +
   labs(
     title = "Distribution of writing session length - 2024 actuals",
     x = "Hours written",
     y = "Percentage of total"
-  ) +
-  theme_minimal()
+  )
 ```
 
 Because my weekend habit is usually to spend one day heavily focused on chores and life admin tasks, my weekend writing productivity usually varies from day-to-day. So instead of just replacing all Fridays or all Sundays, I selected the highest of the three to replace with my workday median of 1.25 if it was greater than the median.
@@ -556,7 +587,9 @@ model_year_daily_merged %>%
     date_breaks = "1 month",
     date_labels = "%b %Y",  
     expand = expansion(mult = c(0, 0))
-  )
+  ) +
+  theme(legend.title = element_blank()) +
+  scale_y_continuous(expand = expansion(add = 0))
 
  
 ```
@@ -956,7 +989,7 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 -   **Combo Chart** - like xlookup, I do not have an example in the shared document, but this is another of my go-tos. For rewrite projects, I track how many pages in I am on a given day. This allows me to better visualize when I have to double back to earlier in the manuscript. I include hours written on a second access because I like seeing how the two relate to one another. Sometimes my "pages in" barely moves when I am hard at work on a difficult scene, but I can see that I was still putting in a lot of time. Below is a screenshot of what this looks like for the Raven project. In it you can see that I frequently had to double back around the 80 page mark to ensure I had the right setup for a particularly difficult scene.
 
-## ![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
 
 ------------------------------------------------------------------------
 
