@@ -40,9 +40,7 @@ highlight_c = "#007d79"
 
 ```
 
-\<Placeholder for opening graphic - possible weekly hours bar chart?\>
-TODO: decide on centering median lines in buckets or not
-# Summary
+\<Placeholder for opening graphic - possible weekly hours bar chart?\> TODO: decide on centering median lines in buckets or not \# Summary
 
 With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by my software development work at Menlo Innovations.
 
@@ -101,6 +99,7 @@ timeline_complete <- timeline %>%
        x = "",
        y = "") +
   theme_minimal() +
+  scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
     date_labels = "%b %Y",  
@@ -315,6 +314,7 @@ Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all m
 I also identified three outlier writing sessions in the query category.
 
 TODO: size to match scale of faceted plots above
+
 ```{r query 2024, fig.height=3, fig.align='center', out.width = "50%"}
 
 
@@ -626,11 +626,21 @@ model_year_monthly %>%
   geom_col(color = "#ffffff",
            fill = base_color
            ) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   facet_wrap(~ hour_set, labeller = facet_labeller) +
   labs(title = "Total hours per month",
        x = "",
        y = "") +
-  theme_minimal() 
+  theme_minimal() +
+    scale_x_date(
+    date_breaks = "1 month",
+    date_labels = "%b",  
+    expand = expansion(mult = c(0, 0))
+  ) +
+  theme(
+    plot.title = element_text(size = 15),
+    panel.spacing = unit(2, "lines")
+    )
 
 model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 #2024 was a leap year
 
@@ -670,7 +680,7 @@ what_if_adjustments <- data.frame(type = c("Starting point"),
 
 TODO: legend labels for all
 
-## 1) No Skip Days 
+## 1) No Skip Days
 
 What if I had maintained my writing streak and written my minimum of 0.25 everyday. In 2025, I skipped writing 57 days - the bulk of them during the pause periods noted previously.
 
@@ -710,15 +720,17 @@ y_25_daily %>%
        x = "",
        y = "") +
   theme_minimal() + 
+  theme(legend.title = element_blank()) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b",  
     expand = expansion(mult = c(0, 0))
   )
 
 ```
 
-## 2) Raised Minimum 
+## 2) Raised Minimum
 
 What if I had maintained my daily writing streak and also raised my minimum to at least 0.5 hours every day?
 
@@ -757,15 +769,17 @@ y_25_daily %>%
        x = "",
        y = "") +
   theme_minimal() + 
+  theme(legend.title = element_blank()) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b",  
     expand = expansion(mult = c(0, 0))
   )
 
 ```
 
-## 3) Two Writing Days 
+## 3) Two Writing Days
 
 What if I wrote at least 1.5 hours on at least two days a week?
 
@@ -854,25 +868,25 @@ y_25_daily_with_twice %>%
        x = "",
        y = "") +
   theme_minimal() + 
+  theme(legend.title = element_blank()) +
+  scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b",  
     expand = expansion(mult = c(0, 0))
   )
 
 ```
 
-## 4) Writing Vacations 
+## 4) Writing Vacations
 
-What if I took time off from work with the express purpose of spending a large portion of that day writing?
+What if I took time off from work with the express purpose of spending a large portion of those days writing?
 
-For this one, I did not create a chart, but rather tables to assessed the potential impact.
+For this one, I did not create a chart, but rather calculated the potential impact.
 
-Given `n` number of writing vacations days and `h` additional hours worked on those days The total yearly increase would be `h * n` And the weekly mean change as a result would be `h * n / 365 * 7`
+Given `n` number of writing vacations days and `h` additional hours worked on those days. The total yearly increase would be `h * n`. And the weekly mean change as a result would be `h * n / 365 * 7`
 
-The resulting tables:
-
-![](images/placeholder_writing_vacations.png)
+So if I had just one writing-focused vacation day with only one extra hour spent writing the impact would be minimal: + 1 hour to the yearly total and +0.02 hours to the weekly mean. At the other end of possibilities, if I took 5 vacations days and wrote and extra 5 hours each of those days: +25 hours to the yearly total and +0.48 to the weekly mean.
 
 ## The results
 
@@ -882,68 +896,58 @@ what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
 
 ```
 
-|   | Model | 2025 start | No Skips | Raised Minimum, No Skips | Two writing days | Vacation |
-|:----------|-----------|:----------|:----------|:----------|-----------|-----------|
-| **Yearly total** | 395.5 | 288.25 | +14.25 | +49.25 | +53.5 | +1 to 25 |
-| **Weekly mean** | 7.56 | 5.53 | +0.27 | +0.94 | +1.03 | +0.02 to 0.48 |
+::: {style="max-width: 400px;"}
+|                  | **Yearly total** | **Weekly mean** |
+|:-----------------|:-----------------|:----------------|
+| Model            | 395.5            | 7.56            |
+| 2025 start       | 288.25           | 5.53            |
+| No Skips         | +14.25           | +0.27           |
+| Raised Minimum   | +49.25           | +0.94           |
+| Two writing days | +53.5            | +1.03           |
+| Vacation         | +1 to 25         | +0.02 to 0.48   |
+:::
 
-Looking at the experiments side-by-side, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.49 weekly mean. So based on my approximations above, I could feasibly reach my model year goal, if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
+Looking at the experiments together, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.49 weekly mean. So based on my approximations above, I could feasibly reach my model year goal if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
 
 # The Plan:
 
-[flip order, too much preamble?]
+Given everything I have learned in this analysis, my writing goals for the start of 2026 are going to be:
 
-My past experience with goals and resolutions has been to start small and obtainable and increase from there. Instead of a yearly total goal, I am going to be focused on the weekly total. This way if life events disrupt my writing or an experiment is not producing results, I only need to start new the next week, and not be bogged down with the feeling that I need to “catch up” and work even harder to make up the difference. 
+1)  Write 6 hours total each week
 
-I decided to round down my weekly model year goal to an even 7.5 hours and set this not as my current weekly goal at the start of 2026, but as the weekly total I want to reach by the end of the year. My 2025 weekly mean was only 5.5 hours a week, so I will start my year aiming for 6 hours and hope to increase that gradually over the year by the remaining 1.5.
+2)  Write 1.5 hours one or more two days a week
 
-Combined with the information in my what ifs my start of year goals are:
+3)  Write a minimum of 0.5 every day
 
-1) Write 6 hours total each week
+Why only 6 hours? Past experience has taught me to start small and obtainable and increase from there. I decided to round down my weekly model year goal to an even 7.5 hours and set this not as my current weekly goal, but as the weekly total I want to reach by the end of the year. My 2025 weekly mean was only 5.5 hours a week, so I will start with an increase to 6 hours and try to gradually increase the remaining 1.5 over the course of the year.
 
-2) Write 1.5 hours or more two days a week
-
-3) Write a minimum of 0.5 every day
+I also set no yearly total goal. Weekly goals allow more flexbility and help me stay motivated. If life events disrupt my writing or an productivity experiment is not producing results, I only need to start new the next week, and not be bogged down with the feeling that I need to catch up and work even harder to make up for the shortcoming.
 
 ## Tracking Dashboard:
 
-To track my progress towards these goals, I created an interactive [Tableau dashboard](https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking) categorizing my weekly writing time per day and also providing a weekly total on the right.
+To track my progress towards these goals, I created an interactive [Tableau dashboard](https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking) categorizing my weekly writing time per day alongside the weekly total.
 
-On the left, the colors are set to allow me to at a glance see if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. If I have had days that fell short of my 0.5 minimum, they would appear as yellow. Or if I broke my writing streak entirely and missed writing for a day, it would be red. 
+On the left, the colors were chosen to allow me to see at a glance if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. If I have had days that fell short of my 0.5 minimum, they would appear as yellow. Or if I broke my writing streak entirely and missed writing for a day, it would appear as red.
 
 \<screenshot\>
 
-As you can see, I have not hit my goals in this first month of the year, but I do not find this surprising, since I had not yet set those goals. A lot of my time had been focused on this analysis, and I had only been writing my old 0.25 minimum. 
+As you can see, I have not hit my goals in this first month of the year, but I do not find that surprising, since I had not yet set those goals and I had been devoting much of my time to this analysis.
 
-\<ADD WRITING STREAK #?\>
-
-I also created a dashboard showing my hourly writing data in a heat map calendar format to help me better track if there are certain higher or lower output days I want to focus on.
+I also created a dashboard showing my hourly writing data in a heat map calendar format to help me better visualize if there are certain higher or lower output days on which I want to focus.
 
 In both dashboards, my entire data set going back to 2023 is available to compare against.
 
 \<screenshot\>
 
-Because the public version of Tableau does not allow for live data source linking, the Tableau dashboard will only be updated periodically when I manually reupload and publish my metrics. For an automated live version, I created a simpler graphic to the first dashboard in a tab in google sheets \<link\> using pivot tables and charts.
+Because the public version of Tableau does not allow for live data source linking, the Tableau dashboard will only be updated periodically when I manually reupload and publish my metrics. For an automatic live version, I created a simpler version of the first dashboard [in a tab in google sheets](https://docs.google.com/spreadsheets/d/1N7T_HbgdGJGohsjXLYBfF8_POvJ1bwDPgBQJ9C8o-Us/edit?gid=1186710364#gid=1186710364) using pivot tables and charts. I also added my longest writing streak and calculated my current streak's length.
 
-\<screenshot\>
+![](images/sheets_dashboard.png){width="430"}
 
-TODO: Build the thing + add screenshots and such
+Now that I have dashboards to track my progress, I can make informed decisions when trying new experiments to hit my different goals.
 
-TODO: Not future analysis below for multiple sessions check
+For example, for my twice a week writing days, I plan to try a few different writing locations away from home on different days of the week to see which ones are easier for me to fit into a repeatable routine and if they actually increase my writing time, or if the added travel time outweighs the benefits of being at a location for a dedicated purpose.
 
-As of the time of my writing this (1/\_\_/2026), my prior weeks have not been anywhere near my new goals. Unsurprising since I had not even established the goals yet and had been spending a majority of my time on this analysis and only maintaining my quarter an hour minimum on writing.
-
-Now that I have a centralized place to see how I am doing, I can make informed decisions to course correct and try new experiments if necessary.
-
-While I had hoped to make this a live dashboard of my numbers, unfortunately the public version of Tableau does not support a live data link to my Google sheet, so this dashboard will need manual reuploads of my data to stay in sync.
-
-SOME KIND OF WRAP UP:
-
-Ideally the success on the left will drive increases on the right, though it is not a guarantee. With 1.5 twice a week and 0.5 the other days, I only reach 5.5 hours. Likewise, I could write a lot on one day of the week and skip or fall below 0.5 the others and be falling short on the left measure.
-
-As the year plays out, I hope to adjust and revise my strategy based on what seems to be working. For example, I plan to add another off-site writing day similar to my writing meet up to my week, but it may turn out that I am better able to consistently keep up that second writing day if I do so from home.
-
-## 
+## SOME KIND OF WRAP UP ??
 
 # Appendix
 
