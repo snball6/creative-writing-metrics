@@ -40,7 +40,7 @@ highlight_c = "#007d79"
 
 ```
 
-With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by the timesheet I kept while working as a software development at Menlo Innovations.
+With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by the timesheet I kept while working as a software developer at Menlo Innovations.
 
 For this project, I applied my analytical and technical skills to my creative writing process to identify insights present in my historical metrics that I could use to inform my writing habits going forward. To do this I enriched my metrics with additional data sources and created visualizations to help contextualize the numbers. I then ran what if scenarios to identify experiments to run and created dashboards for tracking my future progress.
 
@@ -169,8 +169,6 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
 
 To better inform why 2025 fell short of that goal, let me unpack and contextualize my high output year.
 
-TODO: Add labels directly into ggplot like mockup screenshot ![](images/placeholder_timeline.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="680" height="240"}
-
 ```{r annotated timeline, fig.height=4, fig.width=12}
 
 custom_colors <- c("9 none" = "#B0B0B0",
@@ -203,7 +201,72 @@ custom_colors <- c("9 none" = "#B0B0B0",
     expand = expansion(mult = c(0, 0))
   ) +
   scale_y_continuous(expand = expansion(add = 0)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  # annotate
+  annotate("text", x = as.Date("2023-02-10"), y = 35, 
+            label = "Sorceress 2nd", 
+            vjust = "center", 
+            hjust="center") +
+  annotate("curve", x = as.Date("2023-02-10"), y = 32, xend = as.Date("2023-02-01"), yend = 23, 
+       curvature = -.01, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2023-05-15"), y = 27, 
+            label = "1st Draft\nAttempt", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2023-05-15"), y = 20, xend = as.Date("2023-06-15"), yend = 8, 
+       curvature = 0.3, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2023-09-01"), y = 34, 
+            label = "Raven 1st", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2023-09-01"), y = 30, xend = as.Date("2023-10-01"), yend = 19, 
+       curvature = 0.1, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2023-10-30"), y = 53, 
+            label = "Sorceress 3rd", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2023-11-01"), y = 50, xend = as.Date("2023-12-01"), yend = 38,
+       curvature = -0.1, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2024-02-16"), y = 75, 
+            label = "Sorceress 4th - R&R", 
+            vjust = "center", 
+            hjust = "left") +
+  annotate("curve", x = as.Date("2024-02-10"), y = 75, xend = as.Date("2024-01-20"), yend = 75,
+       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2024-04-01"), y = 56, 
+            label = "Raven 2nd", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2024-04-01"), y = 53, xend = as.Date("2024-04-01"), yend = 44,
+       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2024-09-15"), y = 65, 
+            label = "Sorceress 5th", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2024-09-15"), y = 60, xend = as.Date("2024-08-20"), yend = 45,
+       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2025-01-01"), y = 58, 
+            label = "Katarin 1st", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2024-12-25"), y = 55, xend = as.Date("2024-11-18"), yend = 40,
+       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2025-03-18"), y = 38, 
+            label = "Pauses", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2025-02-18"), y = 38, xend = as.Date("2025-02-01"), yend = 10,
+       curvature = .2, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("curve", x = as.Date("2025-04-18"), y = 38, xend = as.Date("2025-05-15"), yend = 18,
+       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
+  annotate("text", x = as.Date("2025-10-10"), y = 56, 
+            label = "Katarin 2nd", 
+            vjust = "center", 
+            hjust = "center") +
+  annotate("curve", x = as.Date("2025-10-10"), y = 52, xend = as.Date("2025-11-01"), yend = 43,
+       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) 
+
+
 
 ```
 
@@ -640,16 +703,14 @@ model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 #2024 
 
 Above you can see the original and adjusted data side-by-side. While I have primarily displayed my data on a monthly cadence up to this point, for the purposes of planning my goal, I am also interested in the more granular weekly measure, so I calculated the weekly mean based on the yearly total for each adjustment. Broken down individually their impact was:
 
-TODO: revisit coloring/styling on tables
-
 ::: {style="max-width: 400px;"}
-|                         | **Yearly total** | **Weekly mean** |
-|------------------------:|-----------------:|----------------:|
-|                **2024** |           554.25 |           10.60 |
-| **3rd Draft Reduction** |          -102.50 |           -1.96 |
-|  **Querying Reduction** |           -11.00 |           -0.21 |
-|  **Schedule Reduction** |           -45.25 |           -0.87 |
-|           **New Model** |           395.50 |            7.56 |
+|   | **Yearly Total** | **Weekly Mean** |
+|-----------------------:|-----------------------:|-----------------------:|
+| **2024** | 554.25 | 10.60 |
+| **3rd Draft Reduction** | [-102.50]{style="color: red;"} | [-1.96]{style="color: red;"} |
+| **Querying Reduction** | [-11.00]{style="color: red;"} | [-0.21]{style="color: red;"} |
+| **Schedule Reduction** | [-45.25]{style="color: red;"} | [-0.87]{style="color: red;"} |
+| **New Model** | 395.50 | 7.56 |
 :::
 
 # What Ifs
@@ -885,8 +946,6 @@ So if I had just one writing-focused vacation day with only one extra hour spent
 
 ## The Results
 
-TODO: revisit coloring/styling on tables
-
 ```{r Calc weekly}
 
 what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
@@ -894,14 +953,14 @@ what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
 ```
 
 ::: {style="max-width: 400px;"}
-|                      | **Yearly total** | **Weekly mean** |
-|---------------------:|-----------------:|----------------:|
-|            **Model** |           395.50 |            7.56 |
-|       **2025 start** |           288.25 |            5.53 |
-|         **No Skips** |           +14.25 |           +0.27 |
-|   **Raised Minimum** |           +49.25 |           +0.94 |
-| **Two writing days** |           +53.50 |           +1.03 |
-|         **Vacation** |         +1 to 25 |   +0.02 to 0.48 |
+|   | **Yearly Total** | **Weekly Mean** |
+|-----------------------:|-----------------------:|-----------------------:|
+| **Model** | 395.50 | 7.56 |
+| **2025 Start** | 288.25 | 5.53 |
+| **No Skips** | [+14.25]{style="color: green;"} | [+0.27]{style="color: green;"} |
+| **Raised Minimum** | [+49.25]{style="color: green;"} | [+0.94]{style="color: green;"} |
+| **Two Writing Days** | [+53.50]{style="color: green;"} | [+1.03]{style="color: green;"} |
+| **Vacation** | [+1 to 25]{style="color: green;"} | [+0.02 to 0.48]{style="color: green;"} |
 :::
 
 Looking at the experiments together, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.49 weekly mean. So based on my approximations above, I could feasibly reach my model year goal if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
