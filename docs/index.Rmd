@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(out.width = "100%")
-library(zoo) # TODO: as.Date conflict
+library(zoo)
 install.packages("tidyverse")
 library(tidyverse)
 library(knitr)
@@ -20,9 +20,6 @@ timesheet <- timesheet %>%
   group_by(date, Day, Time, Category, Project, Sub.Project) %>%
   summarise(Hours = sum(Hours)) %>%
   ungroup()
-
-# todo update new column assignment operators to consistently be <-
-# todo R code indentation formatting
 
 # combined_workday_schedule is intentionally not included
 # in this repo for privacy reasons
