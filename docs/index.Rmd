@@ -109,8 +109,6 @@ My goal for this project was to identify ways to increase my writing productivit
 
 Last year, going into 2025, I had set myself the goal of writing at least an hour most days, that is a mode of 1 hour or higher. I thought it was a safe increase to push myself towards given my success in 2024. Surely, my productivity could just keep going up? But in execution, 2025 fell far short of that goal.
 
-TODO: Add labels in plot for the modes
-
 ```{r 2024 histogram, fig.height=4, fig.width=12}
 y_24_25_date_grouped <- timesheet_complete %>%
   filter(year(date) == 2024 | year(date) == 2025) %>%
@@ -363,7 +361,7 @@ cat_hist %>%
     x = "Hours written",
     y = "Percentage of total"
   ) +
-    geom_vline(data = median_df, aes(xintercept = med_val),
+  geom_vline(data = median_df, aes(xintercept = med_val),
              color = "black", linetype = "dashed", linewidth = 0.5) +
   facet_wrap(~ Category, labeller = facet_labeller)
 ```
@@ -372,10 +370,18 @@ Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all m
 
 I also identified three outlier writing sessions in the query category for 2024.
 
-TODO: Add median line + match faceted style of plots above. Fix y axis scaling.
+```{r query 2024, fig.height=3, fig.align='center', out.width = "55%"}
 
-```{r query 2024, fig.height=3, fig.align='center', out.width = "50%"}
+q_median = median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
 
+median_df <- cat_hist %>%
+  filter(Category %in% c("Querying")) %>%
+  group_by(Category) %>%
+  summarise(med_val = median(Hours)+(0.25/2)) # visually center in bucket
+
+facet_labeller <- as_labeller(c(
+  "Querying" = sprintf("Querying - Median %.2f", q_median)
+))
 
 cat_hist %>%
   filter(Category %in% c("Querying") & year(date) == 2024) %>%
@@ -391,13 +397,15 @@ cat_hist %>%
     ) + 
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
-  scale_y_continuous(expand = expansion(add = 0)) +
   theme_minimal() +
   labs(
-    title = "Distribution of querying writing session length - 2024",
+    title = "Distribution of writing session length - 2024",
     x = "Hours written",
-    y = "Count of Days"
-  ) 
+    y = "Count of days"
+  ) +
+  geom_vline(data = median_df, aes(xintercept = med_val),
+             color = "black", linetype = "dashed", linewidth = 0.5) +
+  facet_wrap(~ Category, labeller = facet_labeller)
 ```
 
 While I usually spend between a quarter and a half hour on querying every few weeks maintaining a list of potential agents for the projects I am working on, it would be unusual for me to spend any longer sessions on the task in 2026 unless I was working on querying material for a specific project. Since I do not plan to query for a particular manuscript in 2026, I also replaced these writing sessions with my 2nd draft median.
