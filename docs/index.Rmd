@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(out.width = "100%")
-library(zoo) #TODO: as.Date conflict
+library(zoo) # TODO: as.Date conflict
 install.packages("tidyverse")
 library(tidyverse)
 library(knitr)
@@ -24,9 +24,9 @@ timesheet <- timesheet %>%
 # todo update new column assignment operators to consistently be <-
 # todo R code indentation formatting
 
-# combined_workday_schedule is intentionally not included 
+# combined_workday_schedule is intentionally not included
 # in this repo for privacy reasons
-schedule <- read.csv("data/combined_workday_schedule.csv") 
+schedule <- read.csv("data/combined_workday_schedule.csv")
 schedule$date <- as.Date(schedule$date, format = "%Y-%m-%d")
 
 # fill in skip days to create a continuous timeseries
@@ -34,10 +34,9 @@ timesheet_complete <- timesheet %>%
   filter(!is.na(date)) %>%
   complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Time = "N/A", Category = "N/A", Project = "N/A", Sub.Project = ""))
 
-reduct_c = "#9ef0f0"
-base_color = "#08bdba"
-highlight_c = "#007d79"
-
+reduct_c <- "#9ef0f0"
+base_color <- "#08bdba"
+highlight_c <- "#007d79"
 ```
 
 With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by the timesheet I kept while working as a software developer at Menlo Innovations.
@@ -83,26 +82,27 @@ timeline_complete <- timeline %>%
   filter(!is.na(date)) %>%
   complete(date = seq(min(date), max(date), by = "day"), fill = list(Hours = 0, Category = "N/A", Project = "N/A", Sub.Project = "", Timeline.category = ""))
 
-  timeline_complete %>%
+timeline_complete %>%
   # aggregate by month
   mutate(year_month = floor_date(date, "month")) %>%
   group_by(year_month) %>%
   summarise(total_hours = sum(Hours), .groups = "drop") %>%
   # plot
   ggplot(aes(x = year_month, y = total_hours)) +
-  geom_col(color = "#ffffff", fill=base_color, show.legend = FALSE) +
-  labs(title = "Monthly Total Hours",
-       x = "",
-       y = "") +
+  geom_col(color = "#ffffff", fill = base_color, show.legend = FALSE) +
+  labs(
+    title = "Monthly Total Hours",
+    x = "",
+    y = ""
+  ) +
   theme_minimal() +
   scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b %Y",
     expand = expansion(mult = c(0, 0))
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 ```
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal.
@@ -117,17 +117,18 @@ y_24_25_date_grouped <- timesheet_complete %>%
 
 y_24_25_date_grouped$year_s <- format(y_24_25_date_grouped$date, "%Y")
 y_24_25_date_grouped$highlight <- ifelse(
-                  # mark 2024 mode and median
-                  (year(y_24_25_date_grouped$date) == 2024 &
-                     y_24_25_date_grouped$sum_hours == 0.5) |
-                  # mark 2025 mode and median
-                    (year(y_24_25_date_grouped$date) == 2025 &
-                     y_24_25_date_grouped$sum_hours == 0.25),
-                              "Highlighted", "Normal")
+  # mark 2024 mode and median
+  (year(y_24_25_date_grouped$date) == 2024 &
+    y_24_25_date_grouped$sum_hours == 0.5) |
+    # mark 2025 mode and median
+    (year(y_24_25_date_grouped$date) == 2025 &
+      y_24_25_date_grouped$sum_hours == 0.25),
+  "Highlighted", "Normal"
+)
 
 median_df <- y_24_25_date_grouped %>%
   group_by(year_s) %>%
-  summarise(med_val = median(sum_hours)+(0.25/2)) # visually center in bucket
+  summarise(med_val = median(sum_hours) + (0.25 / 2)) # visually center in bucket
 median_df$highlight <- "Normal"
 
 facet_labeller <- as_labeller(c(
@@ -135,17 +136,19 @@ facet_labeller <- as_labeller(c(
   "2025" = "2025 - Mode: 0.25 and Median 0.50"
 ))
 
-ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
+ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill = highlight)) +
   geom_histogram(
     binwidth = 0.25,
     boundary = 0,
     closed = "left",
     color = "#FFFFFF",
     show.legend = FALSE
-    ) +
-  geom_vline(data = median_df, aes(xintercept = med_val),
-             color = "black", linetype = "dashed", linewidth = 0.5) +
-  facet_wrap(~ year_s, labeller = facet_labeller) +
+  ) +
+  geom_vline(
+    data = median_df, aes(xintercept = med_val),
+    color = "black", linetype = "dashed", linewidth = 0.5
+  ) +
+  facet_wrap(~year_s, labeller = facet_labeller) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
   scale_y_continuous(expand = expansion(add = 0)) +
@@ -154,13 +157,12 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
   theme(
     plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
-    ) + 
+  ) +
   labs(
     title = "Distribution of writing session length",
     x = "Hours written",
     y = "Number of days"
-  ) 
-
+  )
 ```
 
 # Behind the Data
@@ -168,104 +170,146 @@ ggplot(y_24_25_date_grouped, aes(x = sum_hours, fill=highlight)) +
 To better inform why 2025 fell short of that goal, let me unpack and contextualize my high output year.
 
 ```{r annotated timeline, fig.height=4, fig.width=12}
+custom_colors <- c(
+  "9 none" = "#B0B0B0",
+  "5 Sorceress 2nd" = "#444e86",
+  "8 1st draft attempt" = "#5886a5",
+  "7 Raven 1st" = "#955196",
+  "6 Sorceress 3rd" = "#ff6e54",
+  "4 Sorceress 4th - R & R" = "#faa600",
+  "3 Raven 2nd" = "#dd5182",
+  "2 Sorceress 5th" = "#01976C",
+  "1 Katarin 1st" = "#97014B",
+  "0 Katarin 2nd" = "#015697"
+)
 
-custom_colors <- c("9 none" = "#B0B0B0",
-"5 Sorceress 2nd" = "#444e86",
-"8 1st draft attempt" = "#5886a5",
-"7 Raven 1st" = "#955196",
-"6 Sorceress 3rd" = "#ff6e54",
-"4 Sorceress 4th - R & R" = "#faa600",
-"3 Raven 2nd" = "#dd5182",
-"2 Sorceress 5th" = "#01976C",
-"1 Katarin 1st" = "#97014B",
-"0 Katarin 2nd" = "#015697")
-
-  timeline_complete %>%
+timeline_complete %>%
   # aggregate by month
   mutate(year_month = floor_date(date, "month")) %>%
   group_by(year_month, Timeline.category) %>%
   summarise(total_hours = sum(Hours), .groups = "drop") %>%
   # plot
-  ggplot(aes(x = year_month, y = total_hours,  fill=Timeline.category)) +
+  ggplot(aes(x = year_month, y = total_hours, fill = Timeline.category)) +
   geom_col(color = "#ffffff", show.legend = FALSE) +
   scale_fill_manual(values = custom_colors) +
-  labs(title = "Monthly Total Hours",
-       x = "",
-       y = "") +
+  labs(
+    title = "Monthly Total Hours",
+    x = "",
+    y = ""
+  ) +
   theme_minimal() +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b %Y",
     expand = expansion(mult = c(0, 0))
   ) +
   scale_y_continuous(expand = expansion(add = 0)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # annotate
-  annotate("text", x = as.Date("2023-02-10"), y = 35, 
-            label = "Sorceress 2nd", 
-            vjust = "center", 
-            hjust="center") +
-  annotate("curve", x = as.Date("2023-02-10"), y = 32, xend = as.Date("2023-02-01"), yend = 23, 
-       curvature = -.01, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2023-05-15"), y = 27, 
-            label = "1st Draft\nAttempt", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2023-05-15"), y = 20, xend = as.Date("2023-06-15"), yend = 8, 
-       curvature = 0.3, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2023-09-01"), y = 34, 
-            label = "Raven 1st", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2023-09-01"), y = 30, xend = as.Date("2023-10-01"), yend = 19, 
-       curvature = 0.1, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2023-10-30"), y = 53, 
-            label = "Sorceress 3rd", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2023-11-01"), y = 50, xend = as.Date("2023-12-01"), yend = 38,
-       curvature = -0.1, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2024-02-16"), y = 75, 
-            label = "Sorceress 4th - R&R", 
-            vjust = "center", 
-            hjust = "left") +
-  annotate("curve", x = as.Date("2024-02-10"), y = 75, xend = as.Date("2024-01-20"), yend = 75,
-       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2024-04-01"), y = 56, 
-            label = "Raven 2nd", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2024-04-01"), y = 53, xend = as.Date("2024-04-01"), yend = 44,
-       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2024-09-15"), y = 65, 
-            label = "Sorceress 5th", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2024-09-15"), y = 60, xend = as.Date("2024-08-20"), yend = 45,
-       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2025-01-01"), y = 58, 
-            label = "Katarin 1st", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2024-12-25"), y = 55, xend = as.Date("2024-11-18"), yend = 40,
-       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2025-03-18"), y = 38, 
-            label = "Pauses", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2025-02-18"), y = 38, xend = as.Date("2025-02-01"), yend = 10,
-       curvature = .2, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("curve", x = as.Date("2025-04-18"), y = 38, xend = as.Date("2025-05-15"), yend = 18,
-       curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))) +
-  annotate("text", x = as.Date("2025-10-10"), y = 56, 
-            label = "Katarin 2nd", 
-            vjust = "center", 
-            hjust = "center") +
-  annotate("curve", x = as.Date("2025-10-10"), y = 52, xend = as.Date("2025-11-01"), yend = 43,
-       curvature = 0, arrow = arrow(length = unit(0.3, "cm"))) 
-
-
-
+  annotate("text",
+    x = as.Date("2023-02-10"), y = 35,
+    label = "Sorceress 2nd",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2023-02-10"), y = 32, xend = as.Date("2023-02-01"), yend = 23,
+    curvature = -.01, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2023-05-15"), y = 27,
+    label = "1st Draft\nAttempt",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2023-05-15"), y = 20, xend = as.Date("2023-06-15"), yend = 8,
+    curvature = 0.3, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2023-09-01"), y = 34,
+    label = "Raven 1st",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2023-09-01"), y = 30, xend = as.Date("2023-10-01"), yend = 19,
+    curvature = 0.1, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2023-10-30"), y = 53,
+    label = "Sorceress 3rd",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2023-11-01"), y = 50, xend = as.Date("2023-12-01"), yend = 38,
+    curvature = -0.1, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2024-02-16"), y = 75,
+    label = "Sorceress 4th - R&R",
+    vjust = "center",
+    hjust = "left"
+  ) +
+  annotate("curve",
+    x = as.Date("2024-02-10"), y = 75, xend = as.Date("2024-01-20"), yend = 75,
+    curvature = 0, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2024-04-01"), y = 56,
+    label = "Raven 2nd",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2024-04-01"), y = 53, xend = as.Date("2024-04-01"), yend = 44,
+    curvature = 0, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2024-09-15"), y = 65,
+    label = "Sorceress 5th",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2024-09-15"), y = 60, xend = as.Date("2024-08-20"), yend = 45,
+    curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2025-01-01"), y = 58,
+    label = "Katarin 1st",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2024-12-25"), y = 55, xend = as.Date("2024-11-18"), yend = 40,
+    curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2025-03-18"), y = 38,
+    label = "Pauses",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2025-02-18"), y = 38, xend = as.Date("2025-02-01"), yend = 10,
+    curvature = .2, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("curve",
+    x = as.Date("2025-04-18"), y = 38, xend = as.Date("2025-05-15"), yend = 18,
+    curvature = -.2, arrow = arrow(length = unit(0.3, "cm"))
+  ) +
+  annotate("text",
+    x = as.Date("2025-10-10"), y = 56,
+    label = "Katarin 2nd",
+    vjust = "center",
+    hjust = "center"
+  ) +
+  annotate("curve",
+    x = as.Date("2025-10-10"), y = 52, xend = as.Date("2025-11-01"), yend = 43,
+    curvature = 0, arrow = arrow(length = unit(0.3, "cm"))
+  )
 ```
 
 **2023:**
@@ -315,24 +359,23 @@ Given the differences, instead of trying to repeat 2024 in 2026, I decided to us
 The first high-impact factor was the type of writing I was doing in 2024. It is easier for me to have longer writing sessions when working on 3rd and later drafts. Much of the writing time is spent rereading existing chapters to validate for consistency and continuity. 2nd drafts, by contrast, are high-intensity and I often need frequent breaks. I would compare 3rd+ drafts to a long walk and 2nd drafts to a sprint that is also sometimes uphill.
 
 ```{r category histogram 2024, fig.height=3, fig.width=12}
-
 cat_hist <- timesheet_complete
 
-first_median = median(cat_hist$Hours[cat_hist$Category == "1st Draft"], na.rm = TRUE)
-second_median = median(cat_hist$Hours[cat_hist$Category == "2nd Draft"], na.rm = TRUE)
-third_plus_median = median(cat_hist$Hours[cat_hist$Category == "3rd+ Draft"], na.rm = TRUE)
-query_median = median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
-free_write_median = median(cat_hist$Hours[cat_hist$Category == "Free Write"], na.rm = TRUE)
+first_median <- median(cat_hist$Hours[cat_hist$Category == "1st Draft"], na.rm = TRUE)
+second_median <- median(cat_hist$Hours[cat_hist$Category == "2nd Draft"], na.rm = TRUE)
+third_plus_median <- median(cat_hist$Hours[cat_hist$Category == "3rd+ Draft"], na.rm = TRUE)
+query_median <- median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
+free_write_median <- median(cat_hist$Hours[cat_hist$Category == "Free Write"], na.rm = TRUE)
 
 median_df <- cat_hist %>%
   filter(Category %in% c("2nd Draft", "3rd+ Draft")) %>%
   group_by(Category) %>%
-  summarise(med_val = median(Hours)+(0.25/2)) # visually center in bucket
+  summarise(med_val = median(Hours) + (0.25 / 2)) # visually center in bucket
 
 facet_labeller <- as_labeller(c(
   "1st Draft" = sprintf("1st Draft - Median %.2f", first_median),
   "2nd Draft" = sprintf("2nd Draft - Median %.2f", second_median),
-  "3rd+ Draft" = sprintf("3rd+ Draft - Median %.2f",third_plus_median)
+  "3rd+ Draft" = sprintf("3rd+ Draft - Median %.2f", third_plus_median)
 ))
 
 cat_hist %>%
@@ -345,9 +388,9 @@ cat_hist %>%
     color = "#FFFFFF",
     fill = base_color,
     show.legend = FALSE,
-    position = 'identity',
-    aes(y = after_stat(density * width)) #probability percent
-    ) +
+    position = "identity",
+    aes(y = after_stat(density * width)) # probability percent
+  ) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
   scale_y_continuous(expand = expansion(add = 0)) +
@@ -355,15 +398,17 @@ cat_hist %>%
   theme(
     plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
-    ) + 
+  ) +
   labs(
     title = "Normalized distribution of writing session length - 2023 through 2025",
     x = "Hours written",
     y = "Percentage of total"
   ) +
-  geom_vline(data = median_df, aes(xintercept = med_val),
-             color = "black", linetype = "dashed", linewidth = 0.5) +
-  facet_wrap(~ Category, labeller = facet_labeller)
+  geom_vline(
+    data = median_df, aes(xintercept = med_val),
+    color = "black", linetype = "dashed", linewidth = 0.5
+  ) +
+  facet_wrap(~Category, labeller = facet_labeller)
 ```
 
 Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all my 3rd+ writing draft sessions in the model with my median 2nd draft writing session length of 0.75.
@@ -371,13 +416,12 @@ Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all m
 I also identified three outlier writing sessions in the query category for 2024.
 
 ```{r query 2024, fig.height=3, fig.align='center', out.width = "55%"}
-
-q_median = median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
+q_median <- median(cat_hist$Hours[cat_hist$Category == "Querying"], na.rm = TRUE)
 
 median_df <- cat_hist %>%
   filter(Category %in% c("Querying")) %>%
   group_by(Category) %>%
-  summarise(med_val = median(Hours)+(0.25/2)) # visually center in bucket
+  summarise(med_val = median(Hours) + (0.25 / 2)) # visually center in bucket
 
 facet_labeller <- as_labeller(c(
   "Querying" = sprintf("Querying - Median %.2f", q_median)
@@ -393,8 +437,8 @@ cat_hist %>%
     color = "#FFFFFF",
     fill = base_color,
     show.legend = FALSE,
-    position = 'identity',
-    ) + 
+    position = "identity",
+  ) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
   theme_minimal() +
@@ -403,43 +447,48 @@ cat_hist %>%
     x = "Hours written",
     y = "Count of days"
   ) +
-  geom_vline(data = median_df, aes(xintercept = med_val),
-             color = "black", linetype = "dashed", linewidth = 0.5) +
-  facet_wrap(~ Category, labeller = facet_labeller)
+  geom_vline(
+    data = median_df, aes(xintercept = med_val),
+    color = "black", linetype = "dashed", linewidth = 0.5
+  ) +
+  facet_wrap(~Category, labeller = facet_labeller)
 ```
 
 While I usually spend between a quarter and a half hour on querying every few weeks maintaining a list of potential agents for the projects I am working on, it would be unusual for me to spend any longer sessions on the task in 2026 unless I was working on querying material for a specific project. Since I do not plan to query for a particular manuscript in 2026, I also replaced these writing sessions with my 2nd draft median.
 
 ```{r category corrected, fig.height=3, fig.width=12}
-
 model_year <- timesheet_complete %>%
   filter(year(date) == 2024)
 
 # collect totals of incremental adjustments
-model_adjustments <- data.frame(type = c("2024 Original"),
-                                yearly_total = c(sum(model_year$Hours, na.rm=TRUE)))
+model_adjustments <- data.frame(
+  type = c("2024 Original"),
+  yearly_total = c(sum(model_year$Hours, na.rm = TRUE))
+)
 
 # 3rd draft adjustment
-model_year$cat_adjust_hours = ifelse(model_year$Category == "3rd+ Draft", 
-                                             0.75, model_year$Hours)
+model_year$cat_adjust_hours <- ifelse(model_year$Category == "3rd+ Draft",
+  0.75, model_year$Hours
+)
 
 model_adjustments <- rbind(model_adjustments, data.frame(
-  type ="3rd+ draft replaced",
-  yearly_total = sum(model_year$cat_adjust_hours, na.rm=TRUE)
+  type = "3rd+ draft replaced",
+  yearly_total = sum(model_year$cat_adjust_hours, na.rm = TRUE)
 ))
 
 # Query adjustment
-model_year$cat_adjust_hours = ifelse(model_year$Category == "Querying" 
-                                     & model_year$Hours > 2, 
-                                             0.75, model_year$cat_adjust_hours)
+model_year$cat_adjust_hours <- ifelse(model_year$Category == "Querying" &
+  model_year$Hours > 2,
+0.75, model_year$cat_adjust_hours
+)
 
 model_adjustments <- rbind(model_adjustments, data.frame(
-  type ="Querying replaced",
-  yearly_total = sum(model_year$cat_adjust_hours, na.rm=TRUE)
+  type = "Querying replaced",
+  yearly_total = sum(model_year$cat_adjust_hours, na.rm = TRUE)
 ))
 
-#diff for plotting stacked
-model_year$cat_adjust_diff = model_year$Hours - model_year$cat_adjust_hours
+# diff for plotting stacked
+model_year$cat_adjust_diff <- model_year$Hours - model_year$cat_adjust_hours
 
 model_year %>%
   pivot_longer(
@@ -451,28 +500,29 @@ model_year %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
   summarise(
-    total_hours = sum(split_hours), 
-    .groups = "drop") %>%
+    total_hours = sum(split_hours),
+    .groups = "drop"
+  ) %>%
   # plot
   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
-  geom_col(color = "#ffffff"
-           ) +
+  geom_col(color = "#ffffff") +
   scale_fill_manual(
     values = c("cat_adjust_hours" = base_color, "cat_adjust_diff" = reduct_c),
     labels = c("cat_adjust_hours" = "Updated model", "cat_adjust_diff" = "Reduction")
-    ) +
-  labs(title = "Monthly Total Hours",
-       x = "",
-       y = "") +
+  ) +
+  labs(
+    title = "Monthly Total Hours",
+    x = "",
+    y = ""
+  ) +
   theme_minimal() +
   theme(legend.title = element_blank()) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b %Y",
     expand = expansion(mult = c(0, 0))
   ) +
   scale_y_continuous(expand = expansion(add = 0))
-
 ```
 
 ## Schedule Changes
@@ -480,36 +530,37 @@ model_year %>%
 Another complicating factor to my dataset was my work schedule. In 2024, I was working a 4 day a week schedule at Menlo Innovations. In April 2025, I switched to a 5 day schedule at Quantum Signal AI. To adjust my model year, I wanted to calculate my median weekday versus weekend writing session length, while also considering outliers in the data.
 
 ```{r daily_scatter, fig.height=3, fig.width=12}
-
 # group by day - across categories
 model_year_daily <- model_year %>%
-  group_by(date = floor_date(date, unit ="day")) %>%
+  group_by(date = floor_date(date, unit = "day")) %>%
   summarise(
     total_original_hours = sum(Hours),
     cat_adjust_hours = sum(cat_adjust_hours),
-    .groups = 'drop') %>%
+    .groups = "drop"
+  ) %>%
   mutate(
     day_of_week = weekdays(date),
     # Calculate days to add to reach Sunday - weekday 0
     # If the current day is Sunday (0), add 0 days. If Saturday (6), add 1 day, etc.
     week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7,
   )
-  
+
 
 model_year_daily %>%
   ggplot(aes(x = date, y = total_original_hours)) +
   geom_point(color = base_color) +
-  labs(title = "Daily writing session length - 2024 actuals",
-       x = "",
-       y = "Hours") +
+  labs(
+    title = "Daily writing session length - 2024 actuals",
+    x = "",
+    y = "Hours"
+  ) +
   theme_minimal() +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b %Y",
     expand = expansion(mult = c(0, 0))
   ) +
   scale_y_continuous(expand = expansion(add = 0))
-
 ```
 
 As you can see in the above, my writing hours are highly variable from day-to-day. I knew that the spike up to 8 hours in May 2024 occurred during a vacation week focused almost exclusively on creative writing, but I did not know how many other high or low writing days were on vacations or sick days.
@@ -519,9 +570,8 @@ To determine this I enriched my dataset with information about my work schedule.
 This data enrichment allowed me to confirm that paid leave days in general--both sick days and vacation days--included highly variable data. With these days excluded I could calculate my median weekend and weekday writing speed more accurately.
 
 ```{r schedule histogram 2024, fig.height=3, fig.width=12}
-
 # Added granularity ultimately no needed - consolidated PTO types
-schedule <- schedule %>% 
+schedule <- schedule %>%
   mutate(schedule_type = case_when(
     schedule_category == "holiday" ~ "paid leave",
     schedule_category == "sickday" ~ "paid leave",
@@ -530,15 +580,15 @@ schedule <- schedule %>%
     schedule_category == "workday" ~ "workday",
   ))
 
-merged <- left_join(model_year_daily, schedule, by ="date")
+merged <- left_join(model_year_daily, schedule, by = "date")
 
-pto_median = median(merged$total_original_hours[merged$schedule_type == "paid leave"], na.rm = TRUE)
-weekend_median = median(merged$total_original_hours[merged$schedule_type == "workday"], na.rm = TRUE)
-weekday_median = median(merged$total_original_hours[merged$schedule_type == "weekend"], na.rm = TRUE)
+pto_median <- median(merged$total_original_hours[merged$schedule_type == "paid leave"], na.rm = TRUE)
+weekend_median <- median(merged$total_original_hours[merged$schedule_type == "workday"], na.rm = TRUE)
+weekday_median <- median(merged$total_original_hours[merged$schedule_type == "weekend"], na.rm = TRUE)
 
 median_df <- merged %>%
   group_by(schedule_type) %>%
-  summarise(med_val = median(total_original_hours)+(0.25/2)) # visually center in bucket
+  summarise(med_val = median(total_original_hours) + (0.25 / 2)) # visually center in bucket
 
 facet_labeller <- as_labeller(c(
   "paid leave" = sprintf("Paid Leave - Median %.2f", pto_median),
@@ -555,11 +605,13 @@ merged %>%
     color = "#FFFFFF",
     fill = base_color,
     show.legend = FALSE,
-    position = 'identity',
-    aes(y = after_stat(density * width)) #probability percent
-    ) +
-  geom_vline(data = median_df, aes(xintercept = med_val),
-             color = "black", linetype = "dashed", linewidth = 0.5) +
+    position = "identity",
+    aes(y = after_stat(density * width)) # probability percent
+  ) +
+  geom_vline(
+    data = median_df, aes(xintercept = med_val),
+    color = "black", linetype = "dashed", linewidth = 0.5
+  ) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
   scale_y_continuous(expand = expansion(add = 0)) +
@@ -567,8 +619,8 @@ merged %>%
   theme(
     plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
-    ) + 
-  facet_wrap(~ schedule_type, labeller = facet_labeller) +
+  ) +
+  facet_wrap(~schedule_type, labeller = facet_labeller) +
   labs(
     title = "Distribution of writing session length of category adjusted model year",
     x = "Hours written",
@@ -580,23 +632,24 @@ Because my weekend habit is usually to spend one day heavily focused on chores a
 
 ```{r schedule corrected, fig.height=3, fig.width=12}
 # pivot out for week-wise logic
-temp <- model_year_daily %>% 
+temp <- model_year_daily %>%
   pivot_wider(
     id_cols = week_ending,
-    names_from = day_of_week, 
-    values_from = cat_adjust_hours) %>% 
-  mutate(day_to_adjust = case_when (
-     Friday > 1.25 
-     & Friday >= Saturday 
-     & Friday >= Sunday ~ "Friday",
-     Saturday > 1.25 
-     & Saturday >= Friday 
-     & Saturday >= Sunday ~ "Saturday",
-     Sunday > 1.25
-     & Sunday >= Friday 
-     & Sunday >= Saturday ~ "Sunday",
-     TRUE ~ "None"
-))
+    names_from = day_of_week,
+    values_from = cat_adjust_hours
+  ) %>%
+  mutate(day_to_adjust = case_when(
+    Friday > 1.25 &
+      Friday >= Saturday &
+      Friday >= Sunday ~ "Friday",
+    Saturday > 1.25 &
+      Saturday >= Friday &
+      Saturday >= Sunday ~ "Saturday",
+    Sunday > 1.25 &
+      Sunday >= Friday &
+      Sunday >= Saturday ~ "Sunday",
+    TRUE ~ "None"
+  ))
 
 # overwrite with adjusted values
 temp$Friday <- ifelse(temp$day_to_adjust == "Friday", 1.25, temp$Friday)
@@ -606,28 +659,32 @@ temp$Sunday <- ifelse(temp$day_to_adjust == "Sunday", 1.25, temp$Sunday)
 # pivot back to tall
 temp <- temp %>%
   pivot_longer(
-    cols =  c("Monday", "Tuesday", 
-              "Wednesday", "Thursday" , 
-              "Friday" , "Saturday" , "Sunday"),
+    cols = c(
+      "Monday", "Tuesday",
+      "Wednesday", "Thursday",
+      "Friday", "Saturday", "Sunday"
+    ),
     names_to = "day_of_week",
     values_to = "sched_adjusted_hours"
   )
 
-#calculate dates
-days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3, 
-             "Friday"=2, "Saturday"=1, "Sunday"=0)
+# calculate dates
+days_from_sun <- c(
+  "Monday" = 6, "Tuesday" = 5, "Wednesday" = 4, "Thursday" = 3,
+  "Friday" = 2, "Saturday" = 1, "Sunday" = 0
+)
 temp$date <- temp$week_ending - days_from_sun[temp$day_of_week]
 
 model_year_daily_merged <- merge(model_year_daily, temp[, c("date", "sched_adjusted_hours")], by = "date")
 
 model_adjustments <- rbind(model_adjustments, data.frame(
-  type ="Weekend shortened",
-  yearly_total = sum(model_year_daily_merged$sched_adjusted_hours, na.rm=TRUE)
+  type = "Weekend shortened",
+  yearly_total = sum(model_year_daily_merged$sched_adjusted_hours, na.rm = TRUE)
 ))
 
 # diff for stack plotting
-model_year_daily_merged$sched_adjust_diff = model_year_daily_merged$cat_adjust_hours - 
-                                    model_year_daily_merged$sched_adjusted_hours
+model_year_daily_merged$sched_adjust_diff <- model_year_daily_merged$cat_adjust_hours -
+  model_year_daily_merged$sched_adjusted_hours
 
 model_year_daily_merged %>%
   pivot_longer(
@@ -639,39 +696,40 @@ model_year_daily_merged %>%
   group_by(month, hour_set) %>%
   summarise(
     total_hours = sum(split_hours),
-    .groups = "drop") %>%
+    .groups = "drop"
+  ) %>%
   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
   geom_col(color = "#ffffff") +
   scale_fill_manual(
     values = c("sched_adjust_diff" = reduct_c, "sched_adjusted_hours" = base_color),
     labels = c("sched_adjusted_hours" = "Adjusted Hours", "sched_adjust_diff" = "Reduction")
-    ) +
-  labs(title = "Monthly Total Hours",
-       x = "",
-       y = "") +
-  theme_minimal() + 
+  ) +
+  labs(
+    title = "Monthly Total Hours",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b %Y",  
+    date_labels = "%b %Y",
     expand = expansion(mult = c(0, 0))
   ) +
   theme(legend.title = element_blank()) +
   scale_y_continuous(expand = expansion(add = 0))
-
- 
 ```
 
 ## Model Year Review
 
 ```{r model year review, fig.height=3, fig.width=12}
-
 model_year_monthly <- model_year_daily_merged %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month) %>%
   summarise(
-    orig_hours = sum(total_original_hours), 
-    post_adj_hours = sum(sched_adjusted_hours), 
-    .groups = "drop")
+    orig_hours = sum(total_original_hours),
+    post_adj_hours = sum(sched_adjusted_hours),
+    .groups = "drop"
+  )
 
 facet_labeller <- as_labeller(c(
   "orig_hours" = "2024 actuals",
@@ -686,27 +744,29 @@ model_year_monthly %>%
   ) %>%
   # plot
   ggplot(aes(x = month, y = split_hours)) +
-  geom_col(color = "#ffffff",
-           fill = base_color
-           ) +
+  geom_col(
+    color = "#ffffff",
+    fill = base_color
+  ) +
   scale_y_continuous(expand = expansion(add = 0)) +
-  facet_wrap(~ hour_set, labeller = facet_labeller) +
-  labs(title = "Total hours per month",
-       x = "",
-       y = "") +
+  facet_wrap(~hour_set, labeller = facet_labeller) +
+  labs(
+    title = "Total hours per month",
+    x = "",
+    y = ""
+  ) +
   theme_minimal() +
-    scale_x_date(
+  scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b",  
+    date_labels = "%b",
     expand = expansion(mult = c(0, 0))
   ) +
   theme(
     plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
-    )
+  )
 
-model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 #2024 was a leap year
-
+model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 # 2024 was a leap year
 ```
 
 Above you can see the original and adjusted data side-by-side. While I have primarily displayed my data on a monthly cadence up to this point, for the purposes of planning my goal, I am also interested in the more granular weekly measure, so I calculated the weekly mean based on the yearly total for each adjustment. Broken down individually their impact was:
@@ -726,22 +786,23 @@ Above you can see the original and adjusted data side-by-side. While I have prim
 To identify experiments worth trying, I ran what if scenarios against my lower productivity 2025 dataset to see which adjustments might have allowed me to hit my model year output.
 
 ```{r 2025 daily baseline, fig.height=3, fig.width=12}
-
 y_25_daily <- timesheet_complete %>%
   filter(year(date) == 2025) %>%
   group_by(date) %>%
   summarise(
-    total_orig_hours = sum(Hours), 
-    .groups = "drop") %>%
+    total_orig_hours = sum(Hours),
+    .groups = "drop"
+  ) %>%
   mutate(
     # Calculate days to add to reach Sunday - weekday 0
     # If the current day is Sunday (0), add 0 days. If Saturday (6), add 1 day, etc.
     week_ending = date + (7 - as.numeric(format(date, "%w"))) %% 7
   )
 
-what_if_adjustments <- data.frame(type = c("Starting point"),
-                                yearly_total = c(sum(y_25_daily$total_orig_hours, na.rm=TRUE)))
-
+what_if_adjustments <- data.frame(
+  type = c("Starting point"),
+  yearly_total = c(sum(y_25_daily$total_orig_hours, na.rm = TRUE))
+)
 ```
 
 ## 1) No Skip Days
@@ -749,49 +810,52 @@ what_if_adjustments <- data.frame(type = c("Starting point"),
 What if I had maintained my writing streak and written my minimum of 0.25 hours every day. In 2025, I skipped writing 57 days - the bulk of them during the pause periods noted previously.
 
 ```{r Skip Days, fig.height=3, fig.width=12}
+y_25_daily$skip_adjust_hours <- ifelse(y_25_daily$total_orig_hours == 0,
+  0.25, y_25_daily$total_orig_hours
+)
 
-y_25_daily$skip_adjust_hours = ifelse(y_25_daily$total_orig_hours == 0, 
-                                             0.25, y_25_daily$total_orig_hours)
 
+what_if_adjustments <- rbind(
+  what_if_adjustments,
+  data.frame(
+    type = "No Skips",
+    yearly_total = sum(y_25_daily$skip_adjust_hours, na.rm = TRUE)
+  )
+)
 
-what_if_adjustments <- rbind(what_if_adjustments, 
-                             data.frame(
-                               type ="No Skips",
-                               yearly_total = sum(y_25_daily$skip_adjust_hours, na.rm=TRUE)
-                            ))
-
-y_25_daily$skip_adjust_change = y_25_daily$skip_adjust_hours - y_25_daily$total_orig_hours 
+y_25_daily$skip_adjust_change <- y_25_daily$skip_adjust_hours - y_25_daily$total_orig_hours
 
 y_25_daily %>%
   pivot_longer(
-      cols = c(skip_adjust_hours, skip_adjust_change),
-      names_to = "hour_set",
-      values_to = "split_hours"
+    cols = c(skip_adjust_hours, skip_adjust_change),
+    names_to = "hour_set",
+    values_to = "split_hours"
   ) %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
-    summarise(
-      total_hours = sum(split_hours),
-      .groups = "drop") %>%
+  summarise(
+    total_hours = sum(split_hours),
+    .groups = "drop"
+  ) %>%
   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
-  geom_col(color = "#ffffff"
-           ) +
+  geom_col(color = "#ffffff") +
   scale_fill_manual(
     values = c("skip_adjust_change" = highlight_c, "skip_adjust_hours" = base_color),
     labels = c("Increase", "2025 Basline")
-    ) +
-  labs(title = "No Skip Days",
-       x = "",
-       y = "") +
-  theme_minimal() + 
+  ) +
+  labs(
+    title = "No Skip Days",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
   theme(legend.title = element_blank()) +
   scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b",  
+    date_labels = "%b",
     expand = expansion(mult = c(0, 0))
   )
-
 ```
 
 ## 2) Raised Minimum
@@ -799,48 +863,51 @@ y_25_daily %>%
 What if I had maintained my daily writing streak and also raised my minimum to at least 0.5 hours every day?
 
 ```{r Half Hour Min, fig.height=3, fig.width=12}
+y_25_daily$min_adjust_hours <- ifelse(y_25_daily$total_orig_hours < 0.5,
+  0.5, y_25_daily$total_orig_hours
+)
 
-y_25_daily$min_adjust_hours = ifelse(y_25_daily$total_orig_hours < 0.5, 
-                                             0.5, y_25_daily$total_orig_hours)
+what_if_adjustments <- rbind(
+  what_if_adjustments,
+  data.frame(
+    type = "Raised Minimum",
+    yearly_total = sum(y_25_daily$min_adjust_hours, na.rm = TRUE)
+  )
+)
 
-what_if_adjustments <- rbind(what_if_adjustments,
-                             data.frame(
-                               type ="Raised Minimum",
-                               yearly_total = sum(y_25_daily$min_adjust_hours, na.rm=TRUE)
-                            ))
-
-y_25_daily$min_adjust_change = y_25_daily$min_adjust_hours - y_25_daily$total_orig_hours 
+y_25_daily$min_adjust_change <- y_25_daily$min_adjust_hours - y_25_daily$total_orig_hours
 
 y_25_daily %>%
   pivot_longer(
-      cols = c(min_adjust_hours, min_adjust_change),
-      names_to = "hour_set",
-      values_to = "split_hours"
+    cols = c(min_adjust_hours, min_adjust_change),
+    names_to = "hour_set",
+    values_to = "split_hours"
   ) %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
-    summarise(
-      total_hours = sum(split_hours),
-      .groups = "drop") %>%
+  summarise(
+    total_hours = sum(split_hours),
+    .groups = "drop"
+  ) %>%
   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
-  geom_col(color = "#ffffff"
-           ) +
+  geom_col(color = "#ffffff") +
   scale_fill_manual(
     values = c("min_adjust_change" = highlight_c, "min_adjust_hours" = base_color),
     labels = c("Increase", "2025 Basline")
-    ) +
-  labs(title = "Raised Minimum",
-       x = "",
-       y = "") +
-  theme_minimal() + 
+  ) +
+  labs(
+    title = "Raised Minimum",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
   theme(legend.title = element_blank()) +
   scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b",  
+    date_labels = "%b",
     expand = expansion(mult = c(0, 0))
   )
-
 ```
 
 ## 3) Two Writing Days
@@ -850,10 +917,10 @@ What if I wrote at least 1.5 hours on at least two days a week?
 Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either Wednesday, Saturday, or both days to meet the 2 day requirement.
 
 ```{r Twice Weekly, fig.height=3, fig.width=12}
-#  note partial weeks at start and end of year already met criteria so no 
+#  note partial weeks at start and end of year already met criteria so no
 #  special casing was needed to prevent adding hours for a day in 2024 or 2026
 
-twice <- y_25_daily %>% 
+twice <- y_25_daily %>%
   mutate(
     day_of_week = weekdays(date),
     # Calculate days to add to reach Sunday - weekday 0
@@ -862,84 +929,100 @@ twice <- y_25_daily %>%
   ) %>%
   pivot_wider(
     id_cols = week_ending,
-    names_from = day_of_week, 
-    values_from = total_orig_hours)
+    names_from = day_of_week,
+    values_from = total_orig_hours
+  )
 
 threshold <- 1.5
 
-twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
-                                      "Wednesday", "Thursday" , 
-                                      "Friday" , "Saturday" , "Sunday")],
-                            1, function(row) sum(row >= threshold, na.rm = TRUE))
+twice$weekly_count <- apply(
+  twice[, c(
+    "Monday", "Tuesday",
+    "Wednesday", "Thursday",
+    "Friday", "Saturday", "Sunday"
+  )],
+  1, function(row) sum(row >= threshold, na.rm = TRUE)
+)
 twice$adjust <- ifelse(twice$weekly_count < 2, TRUE, FALSE)
 
-#assign Wednesdays
+# assign Wednesdays
 twice$Wednesday <- ifelse(twice$adjust & twice$Wednesday <= threshold, threshold, twice$Wednesday)
 
-#reassess remaining
-twice$weekly_count <- apply(twice[, c("Monday", "Tuesday", 
-                                      "Wednesday", "Thursday" , 
-                                      "Friday" , "Saturday" , "Sunday")],
-                            1, function(row) sum(row >= threshold, na.rm = TRUE))
+# reassess remaining
+twice$weekly_count <- apply(
+  twice[, c(
+    "Monday", "Tuesday",
+    "Wednesday", "Thursday",
+    "Friday", "Saturday", "Sunday"
+  )],
+  1, function(row) sum(row >= threshold, na.rm = TRUE)
+)
 twice$adjust <- ifelse(twice$weekly_count < 2, TRUE, FALSE)
-#assign Saturdays
+# assign Saturdays
 twice$Saturday <- ifelse(twice$adjust & twice$Saturday <= threshold, threshold, twice$Saturday)
 
-#pivot back to tall
+# pivot back to tall
 twice <- twice %>%
   pivot_longer(
-    cols =  c("Monday", "Tuesday", 
-              "Wednesday", "Thursday" , 
-              "Friday" , "Saturday" , "Sunday"),
+    cols = c(
+      "Monday", "Tuesday",
+      "Wednesday", "Thursday",
+      "Friday", "Saturday", "Sunday"
+    ),
     names_to = "day_of_week",
     values_to = "twice_adjusted_hours"
   )
 
-days_from_sun <- c("Monday"=6, "Tuesday"=5, "Wednesday"=4, "Thursday"=3, 
-             "Friday"=2, "Saturday"=1, "Sunday"=0)
+days_from_sun <- c(
+  "Monday" = 6, "Tuesday" = 5, "Wednesday" = 4, "Thursday" = 3,
+  "Friday" = 2, "Saturday" = 1, "Sunday" = 0
+)
 twice$date <- twice$week_ending - days_from_sun[twice$day_of_week]
 
 y_25_daily_with_twice <- merge(y_25_daily, twice[, c("date", "twice_adjusted_hours")], by = "date")
 
-what_if_adjustments <- rbind(what_if_adjustments, 
-                             data.frame(
-                               type ="Two Writing Days",
-                               yearly_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm=TRUE)
-                            ))
+what_if_adjustments <- rbind(
+  what_if_adjustments,
+  data.frame(
+    type = "Two Writing Days",
+    yearly_total = sum(y_25_daily_with_twice$twice_adjusted_hours, na.rm = TRUE)
+  )
+)
 
-y_25_daily_with_twice$twice_adjust_change <- y_25_daily_with_twice$twice_adjusted_hours - y_25_daily_with_twice$total_orig_hours 
+y_25_daily_with_twice$twice_adjust_change <- y_25_daily_with_twice$twice_adjusted_hours - y_25_daily_with_twice$total_orig_hours
 
 
 y_25_daily_with_twice %>%
   pivot_longer(
-      cols = c(twice_adjusted_hours, twice_adjust_change),
-      names_to = "hour_set",
-      values_to = "split_hours"
+    cols = c(twice_adjusted_hours, twice_adjust_change),
+    names_to = "hour_set",
+    values_to = "split_hours"
   ) %>%
   mutate(month = floor_date(date, "month")) %>%
   group_by(month, hour_set) %>%
-    summarise(
-      total_hours = sum(split_hours),
-      .groups = "drop") %>%
+  summarise(
+    total_hours = sum(split_hours),
+    .groups = "drop"
+  ) %>%
   ggplot(aes(x = month, y = total_hours, fill = hour_set)) +
-  geom_col(color = "#ffffff"
-           ) +
+  geom_col(color = "#ffffff") +
   scale_fill_manual(
     values = c("twice_adjust_change" = highlight_c, "twice_adjusted_hours" = base_color),
-  labels = c("Increase", "2025 Basline")
-    ) +
-  labs(title = "Two Writing Days",
-       x = "",
-       y = "") +
-  theme_minimal() + 
+    labels = c("Increase", "2025 Basline")
+  ) +
+  labs(
+    title = "Two Writing Days",
+    x = "",
+    y = ""
+  ) +
+  theme_minimal() +
   theme(legend.title = element_blank()) +
   scale_y_continuous(expand = expansion(add = 0)) +
   scale_x_date(
     date_breaks = "1 month",
-    date_labels = "%b",  
+    date_labels = "%b",
     expand = expansion(mult = c(0, 0))
   )
-
 ```
 
 ## 4) Writing Vacations
@@ -955,9 +1038,7 @@ So if I had just one writing-focused vacation day with only one extra hour spent
 ## The Results
 
 ```{r Calc weekly}
-
 what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
-
 ```
 
 ::: {style="max-width: 400px;"}
@@ -1148,13 +1229,12 @@ I created an override file listing the date, category, and source/reason for my 
 Ultimately, I decided not to include the extra granularity in my overall analysis. Both sick days and vacation days had highly variable writing session lengths. Not all vacation days were writing focused. Busy holiday gatherings might result in less writing. While sick days were often skip or only quarter an hour writing sessions, there were still instances of high output writing days. In cases where I stayed home sick due to a migraine, but felt well enough by afternoon it would not be unusual for me to be restless to be doing something and choose to invest that time in an hour or more of writing.
 
 ```{r PTO categories, fig.height=3, fig.width=12}
-
 merged_complete <- timesheet_complete %>%
-  group_by(date = floor_date(date, unit ="day")) %>%
+  group_by(date = floor_date(date, unit = "day")) %>%
   summarise(
     total_hours = sum(Hours)
   ) %>%
-  left_join(schedule, by ="date") %>%
+  left_join(schedule, by = "date") %>%
   filter(schedule_category %in% c("holiday", "sickday", "vacation"))
 
 merged_complete %>%
@@ -1166,9 +1246,9 @@ merged_complete %>%
     color = "#FFFFFF",
     fill = base_color,
     show.legend = FALSE,
-    position = 'identity',
-    aes(y = after_stat(density * width)) #probability percent
-    ) +
+    position = "identity",
+    aes(y = after_stat(density * width)) # probability percent
+  ) +
   coord_cartesian(xlim = c(0, 8)) +
   scale_x_continuous(expand = expansion(mult = 0, add = 0)) +
   scale_y_continuous(expand = expansion(add = 0)) +
@@ -1176,8 +1256,8 @@ merged_complete %>%
   theme(
     plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
-    ) + 
-  facet_wrap(~ schedule_category) +
+  ) +
+  facet_wrap(~schedule_category) +
   labs(
     title = "Normalized distribution of writing session length",
     x = "Hours written",
