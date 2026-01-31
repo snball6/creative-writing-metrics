@@ -1,7 +1,7 @@
 ---
 title: "Creative Writing Data Analysis"
 author: "Sarah Ball"
-date: "`r Sys.Date()`"
+date: "2026-01-31"
 output: html_document
 ---
 
@@ -36,9 +36,9 @@ base_color <- "#08bdba"
 highlight_c <- "#007d79"
 ```
 
-With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by the timesheet I kept while working as a software developer at Menlo Innovations.
+With dual degrees in Writing and Computer Science, I have always loved using data to inform my craft. What began as simple word-count tracking of my creative fiction writing, evolved in 2023 into a detailed timesheet that tracked my hours per project—a practice inspired by the timesheets I kept while working as a software developer at Menlo Innovations.
 
-For this project, I applied my analytical and technical skills to my creative writing process to identify insights present in my historical metrics that I could use to inform my writing habits going forward. To do this I enriched my metrics with additional data sources and created visualizations to help contextualize the numbers. I then ran what if scenarios to identify experiments to run and created dashboards for tracking my future progress.
+For this project, I applied my analytical and technical skills to my creative writing process to identify insights present in my historical metrics that I could use to inform my writing habits going forward. To do this I enriched my metrics with additional data sources and created visualizations to help contextualize the numbers. I then ran "what-if" scenarios to identify experiments to run and created dashboards for tracking my future progress.
 
 # Quick Links
 
@@ -88,7 +88,7 @@ timeline_complete %>%
   ggplot(aes(x = year_month, y = total_hours)) +
   geom_col(color = "#ffffff", fill = base_color, show.legend = FALSE) +
   labs(
-    title = "Monthly Total Hours",
+    title = "Total hours per month",
     x = "",
     y = ""
   ) +
@@ -104,7 +104,7 @@ timeline_complete %>%
 
 My goal for this project was to identify ways to increase my writing productivity without setting myself an unrealistic or unattainable goal.
 
-Last year, going into 2025, I had set myself the goal of writing at least an hour most days, that is a mode of 1 hour or higher. I thought it was a safe increase to push myself towards given my success in 2024. Surely, my productivity could just keep going up? But in execution, 2025 fell far short of that goal.
+Last year, going into 2025, I set myself the goal of writing at least an hour most days—that is, a mode of 1 hour or higher. I thought it was a safe increase to push myself towards given my success in 2024. Surely, my productivity could just keep going up? But in execution, 2025 fell far short of that goal.
 
 ```{r 2024 histogram, fig.height=4, fig.width=12}
 y_24_25_date_grouped <- timesheet_complete %>%
@@ -190,7 +190,7 @@ timeline_complete %>%
   geom_col(color = "#ffffff", show.legend = FALSE) +
   scale_fill_manual(values = custom_colors) +
   labs(
-    title = "Monthly Total Hours",
+    title = "Total hours per month",
     x = "",
     y = ""
   ) +
@@ -408,7 +408,7 @@ cat_hist %>%
   facet_wrap(~Category, labeller = facet_labeller)
 ```
 
-Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all my 3rd+ writing draft sessions in the model with my median 2nd draft writing session length of 0.75.
+Because I do not plan to work on a 3rd or later drafts in 2026, I replaced all my 3rd+ draft writing sessions in the model with my median 2nd draft session length of 0.75.
 
 I also identified three outlier writing sessions in the query category for 2024.
 
@@ -508,7 +508,7 @@ model_year %>%
     labels = c("cat_adjust_hours" = "Updated model", "cat_adjust_diff" = "Reduction")
   ) +
   labs(
-    title = "Monthly Total Hours",
+    title = "Total hours per month",
     x = "",
     y = ""
   ) +
@@ -562,9 +562,9 @@ model_year_daily %>%
 
 As you can see in the above, my writing hours are highly variable from day-to-day. I knew that the spike up to 8 hours in May 2024 occurred during a vacation week focused almost exclusively on creative writing, but I did not know how many other high or low writing days were on vacations or sick days.
 
-To determine this I enriched my dataset with information about my work schedule. For more on how I sourced and cleaned my schedule data from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning) in the appendix.
+To determine this, I enriched my dataset with information about my work schedule. For more on how I sourced and cleaned my schedule data from my old Menlo timesheets, see [**Python & Data Cleaning**](#python-and-data-cleaning) in the appendix.
 
-This data enrichment allowed me to confirm that paid leave days in general--both sick days and vacation days--included highly variable data. With these days excluded I could calculate my median weekend and weekday writing speed more accurately.
+This data enrichment allowed me to confirm that paid leave days in general—both sick days and vacation days—included highly variable data. With these days excluded I could calculate my median weekend and weekday writing speed more accurately.
 
 ```{r schedule histogram 2024, fig.height=3, fig.width=12}
 # Added granularity ultimately no needed - consolidated PTO types
@@ -702,7 +702,7 @@ model_year_daily_merged %>%
     labels = c("sched_adjusted_hours" = "Adjusted Hours", "sched_adjust_diff" = "Reduction")
   ) +
   labs(
-    title = "Monthly Total Hours",
+    title = "Total hours per month",
     x = "",
     y = ""
   ) +
@@ -759,14 +759,13 @@ model_year_monthly %>%
     expand = expansion(mult = c(0, 0))
   ) +
   theme(
-    plot.title = element_text(size = 15),
     panel.spacing = unit(2, "lines")
   )
 
 model_adjustments$weekly_mean <- model_adjustments$yearly_total / 366 * 7 # 2024 was a leap year
 ```
 
-Above you can see the original and adjusted data side-by-side. While I have primarily displayed my data on a monthly cadence up to this point, for the purposes of planning my goal, I am also interested in the more granular weekly measure, so I calculated the weekly mean based on the yearly total for each adjustment. Broken down individually their impact was:
+Above you can see the original and adjusted data side-by-side. While I have primarily displayed my data on a monthly cadence up to this point, for the purposes of planning my goal, I am also interested in a more granular weekly measure, so I calculated the weekly mean based on the yearly total for each adjustment. Broken down individually their impact was:
 
 ::: {style="max-width: 400px;"}
 |   | **Yearly Total** | **Weekly Mean** |
@@ -778,9 +777,9 @@ Above you can see the original and adjusted data side-by-side. While I have prim
 | **New Model** | 395.50 | 7.56 |
 :::
 
-# What Ifs
+# What If...?
 
-To identify experiments worth trying, I ran what if scenarios against my lower productivity 2025 dataset to see which adjustments might have allowed me to hit my model year output.
+To identify experiments to try in 2026, I ran "what-if" scenarios against my lower productivity 2025 dataset to see which adjustments might have allowed me to hit my model year output.
 
 ```{r 2025 daily baseline, fig.height=3, fig.width=12}
 y_25_daily <- timesheet_complete %>%
@@ -911,7 +910,7 @@ y_25_daily %>%
 
 What if I wrote at least 1.5 hours on at least two days a week?
 
-Currently, I often hit that threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either Wednesday, Saturday, or both days to meet the 2 day requirement.
+Currently, I often hit this threshold on Wednesdays when I attend a weekly writing meetup. What if I had a second day set aside to extra writing time? To approximate this, I took all weeks that did not already have at least 2 days meeting the criteria, and updated either Wednesday, Saturday, or both days to meet the 2 day requirement.
 
 ```{r Twice Weekly, fig.height=3, fig.width=12}
 #  note partial weeks at start and end of year already met criteria so no
@@ -1042,14 +1041,14 @@ what_if_adjustments$weekly_mean <- what_if_adjustments$yearly_total / 365 * 7
 |   | **Yearly Total** | **Weekly Mean** |
 |-----------------------:|-----------------------:|-----------------------:|
 | **Model** | 395.50 | 7.56 |
-| **2025 Start** | 288.25 | 5.53 |
+| **2025** | 288.25 | 5.53 |
 | **No Skips** | [+14.25]{style="color: green;"} | [+0.27]{style="color: green;"} |
 | **Raised Minimum** | [+49.25]{style="color: green;"} | [+0.94]{style="color: green;"} |
 | **Two Writing Days** | [+53.50]{style="color: green;"} | [+1.03]{style="color: green;"} |
 | **Vacation** | [+1 to 25]{style="color: green;"} | [+0.02 to 0.48]{style="color: green;"} |
 :::
 
-Looking at the experiments together, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.49 weekly mean. So based on my approximations above, I could feasibly reach my model year goal if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
+Looking at the experiments together, the twice weekly option has the highest impact, followed by raising my minimum. If I were to do both I would just fall short at 391 total hours and 7.5 weekly mean. So based on my approximations above, I could feasibly reach my model year goal if I covered the remaining gap with a few vacation writing days, but there would be little room for any contingency.
 
 # Conclusion:
 
@@ -1061,9 +1060,9 @@ Given everything I had learned in this analysis, I chose to set my writing goals
 
 2)  Write at least 1.5 hours two days a week
 
-3)  Write a minimum of 0.5 every day
+3)  Write a minimum of 0.5 hours every day
 
-Why only 6 hours? Past experience has taught me to start small and obtainable and increase from there. I decided to round down my weekly model year goal to an even 7.5 hours and set this not as my current weekly goal, but as the weekly total I want to reach by the end of the year. My 2025 weekly mean was only 5.5 hours a week, so I will start with an increase to 6 hours and try to gradually increase the remaining 1.5 over the course of the year.
+Why only 6 hours? Past experience has taught me to start small and obtainable and increase from there. I decided to round down my weekly model year goal to an even 7.5 hours and set this not as my current weekly goal, but as the weekly total I want to reach by the end of the year. My 2025 weekly mean was only 5.5 hours, so I will start with an increase to 6 hours and try to gradually increase the remaining 1.5 over the course of the year.
 
 I also set no yearly total goal. Weekly goals allow more flexbility and help me stay motivated. If life events disrupt my writing or a productivity experiment is not producing results, I only need to start new the next week, and not be bogged down with the feeling that I need to catch up and work even harder to make up for the shortcoming.
 
@@ -1071,7 +1070,7 @@ I also set no yearly total goal. Weekly goals allow more flexbility and help me 
 
 To track my progress towards these goals, I created an interactive [Tableau dashboard](https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking) categorizing my weekly writing time per day alongside the weekly total.
 
-On the left, the colors allow me to see at a glance if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. Days that fell short of my 0.5 minimum are colored yellow. And if I break my writing streak entirely and miss writing for a day, it would appear as red.
+On the left, the colors allow me to see at a glance if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. Days that fell short of my 0.5 minimum are colored yellow. And days where  I missed writing entirely appear as red.
 
 ![](images/weekly_breakdown_tableau.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
@@ -1079,13 +1078,13 @@ I also created a dashboard showing my hourly writing data in a heat map calendar
 
 ![](images/heatmap_tableau.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
-On both dashboards, my entire dataset going back to 2023 is available to compare against.
+On both dashboards, my entire dataset going back to 2023 is available.
 
 Because the public version of Tableau does not allow for live data source linking, the Tableau dashboard will only be updated periodically when I manually reupload and publish my metrics. For a live version, I created a simpler variation of the first dashboard in my [Shared Writing Metrics spreadsheet](https://docs.google.com/spreadsheets/d/1N7T_HbgdGJGohsjXLYBfF8_POvJ1bwDPgBQJ9C8o-Us/edit?gid=1186710364#gid=1186710364). I also added my longest writing streak and calculated my current streak's length.
 
 ![](images/sheets_dashboard.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="400"}
 
-As you can see, I fell short of my goals in the month of January, but I do not find that particularly surprising since I had not yet selected my goals, and much of my free time was spent on this analysis. Now that I have selected my goals and have an easy way to track my progress and course correct if needed, I look forward to spending more time on my creative writing in the months ahead!
+As you can see, I fell short of my goals in the the last few weeks, but I do not find that particularly surprising since I had not yet selected my goals, and much of my free time was spent on this analysis. Now that I have selected my goals and have an easy way to track my progress and course correct if needed, I look forward to spending more time on my creative writing in the months ahead!
 
 ------------------------------------------------------------------------
 
@@ -1113,7 +1112,7 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 **Formulas:**
 
--   **Importrange** - I chose to split the data I wanted to publicly share as part of this project from some of the more detailed and project-specific data I track in my timesheet--such as extra notes, word count, pages into a rewrite, and less-polished charts. I still wanted the shared sheet to include live data, rather than a snapshot, so I am importing the core metrics from my live spreadsheet into this shared document.
+-   **Importrange** - I chose to split the data I wanted to publicly share as part of this project from some of the more detailed and project-specific data I track in my timesheet—such as extra notes, word count, pages into a rewrite, and less-polished charts. I still wanted the shared sheet to include live data, rather than a snapshot, so I am importing the core metrics from my live spreadsheet into this shared document.
 
 -   **Countif**, **if, or, today** - On the "Skip Days" tab of the sheet, I am generating a full list of dates starting in 2023 to today and creating fill value rows for days I did not write.
 
@@ -1263,6 +1262,8 @@ merged_complete %>%
 ## R Programming {#r-programming}
 
 This report page was written in R Markdown and the html page generated using the knitr library. The .rmd version can be seen [here](https://github.com/snball6/creative-writing-metrics/blob/main/docs/index.Rmd) including the code chunks used to aggregate and alter my dataset and generate the plots of this report.
+
+------------------------------------------------------------------------
 
 ## What do you write? Are you published?
 
