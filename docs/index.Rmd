@@ -69,7 +69,7 @@ My creative writing timesheet is tracked in Google Sheets and it includes five f
 
 -   Sub Project - an optional field to group specific efforts on a project
 
-![](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![](images/timesheet_screenshot.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
 Prior to this analysis project, my primary way of visualizing this information and benchmarking my progress was through pivot tables and charts in Google Sheets.
 
@@ -1072,25 +1072,21 @@ I also set no yearly total goal. Weekly goals allow more flexbility and help me 
 
 ## Tracking Dashboard: {#tracking-dashboard}
 
-TODO: Update all screenshots to latest before publishing
-
 To track my progress towards these goals, I created an interactive [Tableau dashboard](https://public.tableau.com/app/profile/sarah.ball5232/viz/WritingMetrics/2026GoalTracking) categorizing my weekly writing time per day alongside the weekly total.
 
 On the left, the colors allow me to see at a glance if I am on track. Ideally I will have at least 2 blue days in a week and the rest will be green. Days that fell short of my 0.5 minimum are colored yellow. And if I break my writing streak entirely and miss writing for a day, it would appear as red.
 
-![](images/weekly_breakdown_tableau.png)
+![](images/weekly_breakdown_tableau.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
 I also created a dashboard showing my hourly writing data in a heat map calendar format to help me better visualize if there are certain higher or lower output days on which I want to focus.
 
-TODO: Update dashboard title + add month headers / consider cropping to just January
-
-![](images/heatmap_tableau.png)
+![](images/heatmap_tableau.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
 On both dashboards, my entire dataset going back to 2023 is available to compare against.
 
 Because the public version of Tableau does not allow for live data source linking, the Tableau dashboard will only be updated periodically when I manually reupload and publish my metrics. For a live version, I created a simpler variation of the first dashboard in my [Shared Writing Metrics spreadsheet](https://docs.google.com/spreadsheets/d/1N7T_HbgdGJGohsjXLYBfF8_POvJ1bwDPgBQJ9C8o-Us/edit?gid=1186710364#gid=1186710364). I also added my longest writing streak and calculated my current streak's length.
 
-![](images/sheets_dashboard.png){width="430"}
+![](images/sheets_dashboard.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="400"}
 
 As you can see, I fell short of my goals in the month of January, but I do not find that particularly surprising since I had not yet selected my goals, and much of my free time was spent on this analysis. Now that I have selected my goals and have an easy way to track my progress and course correct if needed, I look forward to spending more time on my creative writing in the months ahead!
 
@@ -1148,7 +1144,7 @@ A high level overview of some of the spreadsheet features I am using in this spr
 
 -   **Combo Chart** - I do not have an example of this in the shared document, but combo charts are another of my go-to charts. For rewrite projects, I track how many pages in I am on a given day. This allows me to better visualize when I have to double back to earlier in the manuscript. I include hours written on a second axis because I like seeing how the two relate to one another. Sometimes my pages into rewrite barely moves when I am hard at work on a difficult scene, but I can see that I was still putting in a lot of time. Below is a screenshot of what this looks like for the Raven project. In it you can see that in 2024, I frequently had to double back around the 80 page mark to ensure I had the right setup for a particularly difficult scene.
 
-![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="500"}
+![](images/raven_combo_chart.svg){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
 ------------------------------------------------------------------------
 
@@ -1210,7 +1206,7 @@ For the example above, my script would mark Saturday, Sunday, and Friday as week
 
 After I initially parsed the data, I created a calendar heatmap visualization to help me validate the output. It quickly revealed some potential issues in the data. For example, it looked like I had taken three full weeks of vacation in April! And I saw blank weeks in other years that did not line up with any vacations I remembered taking.
 
-![](images/work_schedule_heatmap.svg)
+![](images/work_schedule_heatmap.png){style="border: 2px solid #595959; padding: 5px; border-radius: 4px; display: block; margin: auto;" width="600"}
 
 I added an additional check to my script to not only list any files that failed to parse, but to also check for any missing dates in the data. The results gave me a clear list of files to manually check, and an answer to why the missing weeks were not in my failed to parse list. The timesheets for those weeks had the right date in their file name, but the wrong one in their cells, resulting in those date's values being overwritten.
 
